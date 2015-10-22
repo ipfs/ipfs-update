@@ -5,7 +5,7 @@ An updater tool for ipfs. Can fetch and install given versions of go-ipfs.
 ## Usage
 ```
 NAME:
-   ipfs-update - A new cli application
+   ipfs-update - update ipfs
 
 USAGE:
    ipfs-update [global options] command [command options] [arguments...]

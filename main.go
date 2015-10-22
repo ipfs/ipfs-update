@@ -278,6 +278,7 @@ func GetBinaryForVersion(root, vers, target string) error {
 func main() {
 	app := cli.NewApp()
 	app.Author = "whyrusleeping"
+	app.Usage = "update ipfs"
 	app.Version = "0.1.0"
 
 	basehash := "/ipfs/QmXUGEDqzHbeGAwj4w72uA9ZJ6iYEaMyfQuioLSLJvcQY6"
