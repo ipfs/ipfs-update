@@ -1,6 +1,13 @@
 # ipfs update
 An updater tool for ipfs. Can fetch and install given versions of go-ipfs.
 
+## Installation
+
+Requirement: Go version 1.5 or higher
+
+```
+go get -u github.com/ipfs/ipfs-update
+```
 
 ## Usage
 ```
