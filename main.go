@@ -120,7 +120,7 @@ func InstallVersion(root, v string) error {
 		return err
 	}
 
-	err = TestBinary(binpath)
+	err = TestBinary(binpath, v)
 	if err != nil {
 		return err
 	}
@@ -202,12 +202,6 @@ func StashOldBinary() (string, error) {
 	}
 
 	return loc, nil
-}
-
-func TestBinary(bin string) error {
-	// TODO: something
-	fmt.Println("WARNING: not testing new binary")
-	return nil
 }
 
 func GetBinaryForVersion(root, vers, target string) error {
@@ -350,16 +344,17 @@ binary and overwrite the current ipfs binary with it.`,
 					return
 				}
 
-				curpath, err := exec.LookPath("ipfs")
+				oldpath, err := ioutil.ReadFile(path.Join(ipfsDir(), "old-bin", "path-old"))
 				if err != nil {
-					fmt.Printf("No existing installation of ipfs found: %s\n", err)
+					fmt.Println("Path for previous installation could not be read: ", err)
 					return
 				}
 
-				err = InstallBinaryTo(oldbinpath, curpath)
+				binpath := string(oldpath)
+				err = InstallBinaryTo(oldbinpath, binpath)
 				if err != nil {
 					fmt.Printf("failed to move old binary: %s\n", oldbinpath)
-					fmt.Printf("to path: %s\n%s\n", curpath, err)
+					fmt.Printf("to path: %s\n%s\n", binpath, err)
 					return
 				}
 			},
