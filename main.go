@@ -35,9 +35,7 @@ func httpFetch(url string) (io.ReadCloser, error) {
 	return resp.Body, nil
 }
 
-// TODO: try ipfs first
 func Fetch(ipfspath string) (io.ReadCloser, error) {
-	fmt.Println("fetch: ", ipfspath)
 	sh := api.NewShell("http://localhost:5001")
 	if sh.IsUp() {
 		return sh.Cat(ipfspath)
@@ -214,7 +212,6 @@ func GetBinaryForVersion(root, vers, target string) error {
 
 	ipfspath := fmt.Sprintf("%s/go-ipfs/%s/%s", root, vers, finame)
 
-	fmt.Println("get binary: ", ipfspath)
 	data, err := Fetch(ipfspath)
 	if err != nil {
 		return err
