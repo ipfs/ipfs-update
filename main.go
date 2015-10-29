@@ -15,15 +15,32 @@ import (
 	"runtime"
 )
 
+var verbose bool
+
+func Log(format string, args ...interface{}) {
+	if format[len(format)-1] != '\n' {
+		format += "\n"
+	}
+	fmt.Printf(format, args...)
+}
+
+func VLog(format string, args ...interface{}) {
+	if verbose {
+		Log(format, args...)
+	}
+}
+
 var gateway = "https://ipfs.io"
 
 func httpFetch(url string) (io.ReadCloser, error) {
+	VLog("fetching url: %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("http.Get error: %s", err)
 	}
 
 	if resp.StatusCode >= 400 {
+		Log("error fetching resource: %s", resp.Status)
 		mes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("error reading error body: %s", err)
@@ -47,6 +64,7 @@ func Fetch(ipfspath string) (io.ReadCloser, error) {
 // This function is needed because os.Rename doesnt work across filesystem
 // boundaries.
 func CopyTo(src, dest string) error {
+	VLog("  - copying %s to %s", src, dest)
 	fi, err := os.Open(src)
 	if err != nil {
 		return err
@@ -85,7 +103,7 @@ func GetCurrentVersion() (string, error) {
 		return v, nil
 	}
 
-	fmt.Println("daemon check failed: ", err)
+	VLog("daemon check failed: %s", err)
 
 	// try running the ipfs binary in the users path
 	out, err := exec.Command("ipfs", "version", "-n").CombinedOutput()
@@ -106,6 +124,7 @@ func GetLatestVersion(ipfspath string) (string, error) {
 }
 
 func InstallVersion(root, v string) error {
+	Log("installing ipfs version %s", v)
 	tmpd, err := ioutil.TempDir("", "ipfs-update")
 	if err != nil {
 		return err
@@ -113,21 +132,27 @@ func InstallVersion(root, v string) error {
 
 	binpath := path.Join(tmpd, "ipfs-new")
 
+	Log("fetching %s binary...", v)
 	err = GetBinaryForVersion(root, v, binpath)
 	if err != nil {
 		return err
 	}
+
+	Log("binary downloaded, verifying...")
 
 	err = TestBinary(binpath, v)
 	if err != nil {
 		return err
 	}
 
+	Log("verified! stashing old binary")
+
 	oldpath, err := StashOldBinary()
 	if err != nil {
 		return err
 	}
 
+	Log("installing new binary to %s", oldpath)
 	err = InstallBinaryTo(binpath, oldpath)
 	if err != nil {
 		// in case of error here, replace old binary
@@ -194,6 +219,7 @@ func StashOldBinary() (string, error) {
 		return "", fmt.Errorf("couldnt stash path: ", err)
 	}
 
+	VLog("  - moving %s to %s", loc, npath)
 	err = os.Rename(loc, npath)
 	if err != nil {
 		return "", fmt.Errorf("could not move old binary: %s", err)
@@ -273,6 +299,18 @@ func main() {
 	app.Version = "0.1.0"
 
 	basehash := "/ipfs/QmXUGEDqzHbeGAwj4w72uA9ZJ6iYEaMyfQuioLSLJvcQY6"
+
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "verbose",
+			Usage: "print verbose output",
+		},
+	}
+
+	app.Before = func(c *cli.Context) error {
+		verbose = c.Bool("verbose")
+		return nil
+	}
 
 	app.Commands = []cli.Command{
 		{
