@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/whyrusleeping/stump"
+	. "QmQCG86gb1evuzBTkjKuZ22KVkT3yf7vhDqvZXrMjVUucT/stump"
 )
 
 func runCmd(p, bin string, args ...string) (string, error) {

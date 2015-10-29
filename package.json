@@ -1,0 +1,19 @@
+{
+  "name": "ipfs-update",
+  "version": "0.1.0",
+  "dependencies": [
+    {
+      "name": "cli",
+      "hash": "QmcTTDFcqaYfDTmnd2Ax8NHoqtrgvVgWFEnCDanA57Rq74"
+    },
+    {
+      "name": "go-ipfs-api",
+      "hash": "QmbVB7BZtERakxusN3WctPytw3ZEFgxJm4cQ9gBfsMF4kh"
+    },
+    {
+      "name": "stump",
+      "hash": "QmQCG86gb1evuzBTkjKuZ22KVkT3yf7vhDqvZXrMjVUucT"
+    }
+  ],
+  "language": "go"
+}

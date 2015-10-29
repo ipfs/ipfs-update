@@ -1,12 +1,12 @@
 package main
 
 import (
+	. "QmQCG86gb1evuzBTkjKuZ22KVkT3yf7vhDqvZXrMjVUucT/stump"
+	api "QmbVB7BZtERakxusN3WctPytw3ZEFgxJm4cQ9gBfsMF4kh/go-ipfs-api"
+	cli "QmcTTDFcqaYfDTmnd2Ax8NHoqtrgvVgWFEnCDanA57Rq74/cli"
 	"archive/zip"
 	"bufio"
 	"fmt"
-	cli "github.com/codegangsta/cli"
-	api "github.com/ipfs/go-ipfs-api"
-	. "github.com/whyrusleeping/stump"
 	"io"
 	"io/ioutil"
 	"net/http"
