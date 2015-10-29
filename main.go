@@ -6,6 +6,7 @@ import (
 	"fmt"
 	cli "github.com/codegangsta/cli"
 	api "github.com/ipfs/go-ipfs-api"
+	. "github.com/whyrusleeping/stump"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,21 +15,6 @@ import (
 	"path"
 	"runtime"
 )
-
-var verbose bool
-
-func Log(format string, args ...interface{}) {
-	if format[len(format)-1] != '\n' {
-		format += "\n"
-	}
-	fmt.Printf(format, args...)
-}
-
-func VLog(format string, args ...interface{}) {
-	if verbose {
-		Log(format, args...)
-	}
-}
 
 var gateway = "https://ipfs.io"
 
@@ -308,7 +294,7 @@ func main() {
 	}
 
 	app.Before = func(c *cli.Context) error {
-		verbose = c.Bool("verbose")
+		Verbose = c.Bool("verbose")
 		return nil
 	}
 

@@ -12,6 +12,8 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	. "github.com/whyrusleeping/stump"
 )
 
 func runCmd(p, bin string, args ...string) (string, error) {
@@ -37,13 +39,13 @@ type daemon struct {
 func (d *daemon) Close() error {
 	err := d.p.Kill()
 	if err != nil {
-		fmt.Printf("error killing daemon: %s", err)
+		Error("error killing daemon: %s", err)
 		return err
 	}
 
 	_, err = d.p.Wait()
 	if err != nil {
-		fmt.Printf("error waiting on killed daemon: %s", err)
+		Error("error waiting on killed daemon: %s", err)
 		return err
 	}
 
@@ -188,7 +190,7 @@ func TestBinary(bin, version string) error {
 		// defer cleanup, bound param to avoid mistakes
 		err = os.RemoveAll(dir)
 		if err != nil {
-			fmt.Println("error cleaning up staging directory: ", err)
+			Error("error cleaning up staging directory: ", err)
 		}
 	}(tdir)
 
@@ -235,8 +237,8 @@ func testFileAdd(tdir, bin string) error {
 	c.Stdin = data
 	out, err := c.CombinedOutput()
 	if err != nil {
-		fmt.Printf("testfileadd fail: %s\n", err)
-		fmt.Println(string(out))
+		Error("testfileadd fail: %s", err)
+		Error(string(out))
 		return err
 	}
 

@@ -10,28 +10,23 @@ go get -u github.com/ipfs/ipfs-update
 ```
 
 ## Usage
-```
-NAME:
-   ipfs-update - update ipfs
 
-USAGE:
-   ipfs-update [global options] command [command options] [arguments...]
-   
-VERSION:
-   0.1.0
-   
-AUTHOR(S):
-   whyrusleeping 
-   
-COMMANDS:
-   versions	print out all available versions
-   version	print out currently installed version
-   install	install a version of ipfs
-   revert	revert to previously installed version of ipfs
-   fetch	fetch a given (default: latest) version of ipfs
-   help, h	Shows a list of commands or help for one command
-   
-GLOBAL OPTIONS:
-   --help, -h		show help
-   --version, -v	print the version
-```
+### `version`
+`ipfs-update version` prints out the version of ipfs that is currently installed.
+
+### `versions`
+`ipfs-update versions` prints out all versions of ipfs available for installation.
+
+### `install`
+`ipfs-update install <version>` downloads, tests, and installs the specified version
+of ipfs. The existing version is stashed in case a revert is needed.
+
+### `revert`
+`ipfs-update revert` reverts to the previously installed version of ipfs. This
+is useful if the newly installed version has issues and you would like to switch
+back to your older stable installation.
+
+### `fetch`
+`ipfs-update fetch` downloads the specified version of ipfs into your current
+directory. This is a plumbing command that can be utilized in scripts or by
+more advanced users.
