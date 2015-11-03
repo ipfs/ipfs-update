@@ -9,7 +9,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -55,7 +55,7 @@ func (d *daemon) Close() error {
 }
 
 func tweakConfig(ipfspath string) error {
-	cfgpath := path.Join(ipfspath, "config")
+	cfgpath := filepath.Join(ipfspath, "config")
 	cfg := make(map[string]interface{})
 	cfgbytes, err := ioutil.ReadFile(cfgpath)
 	if err != nil {
@@ -94,12 +94,12 @@ func tweakConfig(ipfspath string) error {
 func StartDaemon(p, bin string) (io.Closer, error) {
 	cmd := exec.Command(bin, "daemon")
 
-	stdout, err := os.Create(path.Join(p, "daemon.stdout"))
+	stdout, err := os.Create(filepath.Join(p, "daemon.stdout"))
 	if err != nil {
 		return nil, err
 	}
 
-	stderr, err := os.Create(path.Join(p, "daemon.stderr"))
+	stderr, err := os.Create(filepath.Join(p, "daemon.stderr"))
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func StartDaemon(p, bin string) (io.Closer, error) {
 }
 
 func waitForApi(ipfspath string) error {
-	apifile := path.Join(ipfspath, "api")
+	apifile := filepath.Join(ipfspath, "api")
 	var endpoint string
 	for i := 0; i < 10; i++ {
 		val, err := ioutil.ReadFile(apifile)
@@ -170,7 +170,7 @@ func TestBinary(bin, version string) error {
 		return err
 	}
 
-	staging := path.Join(ipfsDir(), "update-staging")
+	staging := filepath.Join(ipfsDir(), "update-staging")
 	err = os.MkdirAll(staging, 0755)
 	if err != nil {
 		return fmt.Errorf("error creating test staging directory: %s", err)
@@ -194,11 +194,13 @@ func TestBinary(bin, version string) error {
 		}
 	}(tdir)
 
+	VLog("  - running init in '%s' with new binary", tdir)
 	_, err = runCmd(tdir, bin, "init")
 	if err != nil {
 		return fmt.Errorf("error initializing with new binary: %s", err)
 	}
 
+	VLog("  - checking new binary outputs correct version")
 	rversion, err := runCmd(tdir, bin, "version")
 	if err != nil {
 		return err
@@ -209,19 +211,32 @@ func TestBinary(bin, version string) error {
 	}
 
 	// set up ports in config so we dont interfere with an already running daemon
+	VLog("  - tweaking test config to avoid external interference")
 	err = tweakConfig(tdir)
 	if err != nil {
 		return err
 	}
 
+	VLog("  - starting up daemon")
 	daemon, err := StartDaemon(tdir, bin)
 	if err != nil {
 		return fmt.Errorf("error starting daemon: %s", err)
 	}
-	defer daemon.Close()
+	defer func() {
+		VLog("  - killing test daemon")
+		err := daemon.Close()
+		if err != nil {
+			VLog("  - error killing test daemon: %s (continuing anyway)", err)
+		}
+	}()
 
-	// test things against the daemon
+	// test some basic things against the daemon
 	err = testFileAdd(tdir, bin)
+	if err != nil {
+		return err
+	}
+
+	err = testRefsList(tdir, bin)
 	if err != nil {
 		return err
 	}
@@ -230,6 +245,7 @@ func TestBinary(bin, version string) error {
 }
 
 func testFileAdd(tdir, bin string) error {
+	VLog("  - checking that we can add and cat a file")
 	text := "hello world! This node should work"
 	data := bytes.NewBufferString(text)
 	c := exec.Command(bin, "add", "-q")
@@ -253,4 +269,32 @@ func testFileAdd(tdir, bin string) error {
 	}
 
 	return nil
+}
+
+func testRefsList(tdir, bin string) error {
+	VLog("  - checking that file shows up in ipfs refs local")
+	c := exec.Command(bin, "refs", "local")
+	c.Env = []string{"IPFS_PATH=" + tdir}
+	out, err := c.CombinedOutput()
+	if err != nil {
+		Error("testfileadd fail: %s", err)
+		Error(string(out))
+		return err
+	}
+
+	hashes := strings.Split(string(out), "\n")
+	exp := "QmTFJQ68kaArzsqz2Yjg1yMyEA5TXTfNw6d9wSFhxtBxz2"
+	var found bool
+	for _, h := range hashes {
+		if h == exp {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("expected to see %s in the local refs!", exp)
+	}
+
+	return nil
+
 }

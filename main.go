@@ -12,8 +12,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 var gateway = "https://ipfs.io"
@@ -26,7 +27,7 @@ func httpFetch(url string) (io.ReadCloser, error) {
 	}
 
 	if resp.StatusCode >= 400 {
-		Log("error fetching resource: %s", resp.Status)
+		Error("fetching resource: %s", resp.Status)
 		mes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("error reading error body: %s", err)
@@ -55,11 +56,13 @@ func CopyTo(src, dest string) error {
 	if err != nil {
 		return err
 	}
+	defer fi.Close()
 
 	trgt, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
+	defer trgt.Close()
 
 	_, err = io.Copy(trgt, fi)
 	return err
@@ -116,7 +119,7 @@ func InstallVersion(root, v string) error {
 		return err
 	}
 
-	binpath := path.Join(tmpd, "ipfs-new")
+	binpath := filepath.Join(tmpd, "ipfs-new")
 
 	Log("fetching %s binary...", v)
 	err = GetBinaryForVersion(root, v, binpath)
@@ -131,8 +134,7 @@ func InstallVersion(root, v string) error {
 		return err
 	}
 
-	Log("verified! stashing old binary")
-
+	Log("success! stashing old binary")
 	oldpath, err := StashOldBinary()
 	if err != nil {
 		return err
@@ -142,17 +144,85 @@ func InstallVersion(root, v string) error {
 	err = InstallBinaryTo(binpath, oldpath)
 	if err != nil {
 		// in case of error here, replace old binary
-		stashpath := path.Join(ipfsDir(), "old-bin", "ipfs-old")
-		rnerr := os.Rename(stashpath, oldpath)
-		if rnerr != nil {
-			fmt.Println("error replacing binary after install fail: ", rnerr)
-			fmt.Println("sorry :(")
-			fmt.Println("your old ipfs binary should still be located at: ", stashpath)
-		}
+		Error("Install failed: ", err)
+		revertOldBinary(oldpath)
+		return err
+	}
+
+	err = CheckMigration()
+	if err != nil {
+		Error("Migration Failed: ", err)
+		revertOldBinary(oldpath)
 		return err
 	}
 
 	return nil
+}
+
+func CheckMigration() error {
+	Log("checking if repo migration is needed...")
+	p := ipfsDir()
+	oldverB, err := ioutil.ReadFile(filepath.Join(p, "version"))
+	if err != nil {
+		return err
+	}
+
+	oldver := strings.Trim(string(oldverB), "\n \t")
+	VLog("  - old repo version is", oldver)
+
+	nbinver, err := runCmd("", "ipfs", "version", "--repo")
+	if err != nil {
+		Log("Failed to check new binary repo version.")
+		VLog("Reason: ", err)
+		Log("This means you may have to manually run the migration")
+		Log("You will be prompted to do so upon starting the ipfs daemon if necessary")
+		return nil
+	}
+
+	VLog("  - repo version of new binary is ", nbinver)
+
+	if oldver != nbinver {
+		Log("MIGRATION NEEDED!")
+		return nil
+	}
+
+	VLog("  - no migration required")
+
+	return nil
+}
+
+func RunMigration(oldv, newv string) error {
+	migrateBin := "fs-repo-migrations"
+	_, err := exec.LookPath(migrateBin)
+	if err != nil {
+		Error("could not find migrations binary: ", err)
+		return err
+	}
+
+	cmd := exec.Command(migrateBin, "-to", newv, "-y")
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	Log("running migration: '%s -to %s -y'", migrateBin, newv)
+
+	err = cmd.Run()
+	if err != nil {
+		return fmt.Errorf("migration failed: %s", err)
+	}
+
+	Log("migration succeeded!")
+	return nil
+}
+
+func revertOldBinary(oldpath string) {
+	stashpath := filepath.Join(ipfsDir(), "old-bin", "ipfs-old")
+	rnerr := os.Rename(stashpath, oldpath)
+	if rnerr != nil {
+		Log("error replacing binary after install fail: ", rnerr)
+		Log("sorry :(")
+		Log("your old ipfs binary should still be located at: ", stashpath)
+	}
 }
 
 func InstallBinaryTo(nbin, nloc string) error {
@@ -170,7 +240,7 @@ func InstallBinaryTo(nbin, nloc string) error {
 }
 
 func ipfsDir() string {
-	def := path.Join(os.Getenv("HOME"), ".ipfs")
+	def := filepath.Join(os.Getenv("HOME"), ".ipfs")
 
 	ipfs_path := os.Getenv("IPFS_PATH")
 	if ipfs_path != "" {
@@ -190,9 +260,9 @@ func StashOldBinary() (string, error) {
 
 	ipfsdir := ipfsDir()
 
-	olddir := path.Join(ipfsdir, "old-bin")
-	npath := path.Join(olddir, "ipfs-old")
-	pathpath := path.Join(olddir, "path-old")
+	olddir := filepath.Join(ipfsdir, "old-bin")
+	npath := filepath.Join(olddir, "ipfs-old")
+	pathpath := filepath.Join(olddir, "path-old")
 
 	err = os.MkdirAll(olddir, 0700)
 	if err != nil {
@@ -229,7 +299,7 @@ func GetBinaryForVersion(root, vers, target string) error {
 		return err
 	}
 
-	zippath := path.Join(dir, finame)
+	zippath := filepath.Join(dir, finame)
 	fi, err := os.Create(zippath)
 	if err != nil {
 		return err
@@ -358,14 +428,14 @@ func main() {
 			Description: `revert will check if a previous update left a stashed
 binary and overwrite the current ipfs binary with it.`,
 			Action: func(c *cli.Context) {
-				oldbinpath := path.Join(ipfsDir(), "old-bin", "ipfs-old")
+				oldbinpath := filepath.Join(ipfsDir(), "old-bin", "ipfs-old")
 				_, err := os.Stat(oldbinpath)
 				if os.IsNotExist(err) {
 					fmt.Printf("No prior binary found at: %s\n", err)
 					return
 				}
 
-				oldpath, err := ioutil.ReadFile(path.Join(ipfsDir(), "old-bin", "path-old"))
+				oldpath, err := ioutil.ReadFile(filepath.Join(ipfsDir(), "old-bin", "path-old"))
 				if err != nil {
 					fmt.Println("Path for previous installation could not be read: ", err)
 					return
@@ -374,8 +444,8 @@ binary and overwrite the current ipfs binary with it.`,
 				binpath := string(oldpath)
 				err = InstallBinaryTo(oldbinpath, binpath)
 				if err != nil {
-					fmt.Printf("failed to move old binary: %s\n", oldbinpath)
-					fmt.Printf("to path: %s\n%s\n", binpath, err)
+					Error("failed to move old binary: %s\n", oldbinpath)
+					Log("to path: %s\n%s\n", binpath, err)
 					return
 				}
 			},
