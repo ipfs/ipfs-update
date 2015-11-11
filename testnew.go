@@ -131,10 +131,11 @@ func StartDaemon(p, bin string) (io.Closer, error) {
 func waitForApi(ipfspath string) error {
 	apifile := filepath.Join(ipfspath, "api")
 	var endpoint string
-	for i := 0; i < 10; i++ {
+	nloops := 20
+	for i := 0; i < nloops; i++ {
 		val, err := ioutil.ReadFile(apifile)
 		if os.IsNotExist(err) {
-			if i == 9 {
+			if i == nloops-1 {
 				return fmt.Errorf("failed to find api file")
 			}
 			time.Sleep(time.Millisecond * (100 * time.Duration(i+1)))
@@ -296,5 +297,4 @@ func testRefsList(tdir, bin string) error {
 	}
 
 	return nil
-
 }
