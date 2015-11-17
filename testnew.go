@@ -131,7 +131,7 @@ func StartDaemon(p, bin string) (io.Closer, error) {
 func waitForApi(ipfspath string) error {
 	apifile := filepath.Join(ipfspath, "api")
 	var endpoint string
-	nloops := 20
+	nloops := 25
 	for i := 0; i < nloops; i++ {
 		val, err := ioutil.ReadFile(apifile)
 		if os.IsNotExist(err) {

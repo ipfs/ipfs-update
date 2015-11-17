@@ -354,7 +354,7 @@ func main() {
 	app.Usage = "update ipfs"
 	app.Version = "0.1.0"
 
-	basehash := "/ipfs/QmXUGEDqzHbeGAwj4w72uA9ZJ6iYEaMyfQuioLSLJvcQY6"
+	basehash := "/ipfs/QmSiTko9JZyabH56y2fussEt1A5oDqsFXB3CkvAqraFryz"
 
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
