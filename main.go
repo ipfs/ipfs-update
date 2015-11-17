@@ -431,8 +431,7 @@ binary and overwrite the current ipfs binary with it.`,
 				oldbinpath := filepath.Join(ipfsDir(), "old-bin", "ipfs-old")
 				_, err := os.Stat(oldbinpath)
 				if os.IsNotExist(err) {
-					fmt.Printf("No prior binary found at: %s\n", err)
-					return
+					Fatal("No prior binary found at:", err)
 				}
 
 				oldpath, err := ioutil.ReadFile(filepath.Join(ipfsDir(), "old-bin", "path-old"))

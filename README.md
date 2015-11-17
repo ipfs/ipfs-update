@@ -9,6 +9,10 @@ Requirement: Go version 1.5 or higher
 go get -u github.com/ipfs/ipfs-update
 ```
 
+## Note
+If you do not see the expected version listed by `ipfs-update versions`. Try updating
+`ipfs-update` (either by the above `go get` command or through gobuilder).
+
 ## Usage
 
 ### `version`
