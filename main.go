@@ -479,8 +479,7 @@ binary and overwrite the current ipfs binary with it.`,
 				if vers == "" || vers == "latest" {
 					latest, err := GetLatestVersion(basehash)
 					if err != nil {
-						fmt.Println("error querying latest version: ", err)
-						return
+						Fatal("error querying latest version: ", err)
 					}
 
 					vers = latest
@@ -494,8 +493,12 @@ binary and overwrite the current ipfs binary with it.`,
 
 				err := GetBinaryForVersion(basehash, vers, output)
 				if err != nil {
-					fmt.Println("Failed to fetch binary: ", err)
-					return
+					Fatal("Failed to fetch binary: ", err)
+				}
+
+				err = os.Chmod(output, 0755)
+				if err != nil {
+					Fatal("setting new binary executable: ", err)
 				}
 			},
 			Flags: []cli.Flag{
