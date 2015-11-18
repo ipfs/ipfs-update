@@ -112,7 +112,7 @@ func GetLatestVersion(ipfspath string) (string, error) {
 	return vs[len(vs)-1], nil
 }
 
-func InstallVersion(root, v string) error {
+func InstallVersion(root, v string, nocheck bool) error {
 	Log("installing ipfs version %s", v)
 	tmpd, err := ioutil.TempDir("", "ipfs-update")
 	if err != nil {
@@ -127,11 +127,14 @@ func InstallVersion(root, v string) error {
 		return err
 	}
 
-	Log("binary downloaded, verifying...")
-
-	err = TestBinary(binpath, v)
-	if err != nil {
-		return err
+	if !nocheck {
+		Log("binary downloaded, verifying...")
+		err = TestBinary(binpath, v)
+		if err != nil {
+			return err
+		}
+	} else {
+		Log("skipping tests since '--no-check' was passed")
 	}
 
 	Log("stashing old binary")
@@ -183,7 +186,7 @@ func CheckMigration() error {
 	VLog("  - repo version of new binary is ", nbinver)
 
 	if oldver != nbinver {
-		Log("Migration required")
+		Log("  - Migration required")
 		return RunMigration(oldver, nbinver)
 	}
 
@@ -417,7 +420,7 @@ func main() {
 					vers = latest
 				}
 
-				err := InstallVersion(basehash, vers)
+				err := InstallVersion(basehash, vers, c.Bool("no-check"))
 				if err != nil {
 					Fatal(err)
 				}
