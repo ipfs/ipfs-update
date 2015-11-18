@@ -134,7 +134,7 @@ func InstallVersion(root, v string) error {
 		return err
 	}
 
-	Log("success! stashing old binary")
+	Log("stashing old binary")
 	oldpath, err := StashOldBinary()
 	if err != nil {
 		return err
@@ -174,7 +174,8 @@ func CheckMigration() error {
 	if err != nil {
 		Log("Failed to check new binary repo version.")
 		VLog("Reason: ", err)
-		Log("This means you may have to manually run the migration")
+		Log("This is not an error.")
+		Log("This just means that you may have to manually run the migration")
 		Log("You will be prompted to do so upon starting the ipfs daemon if necessary")
 		return nil
 	}
@@ -182,8 +183,8 @@ func CheckMigration() error {
 	VLog("  - repo version of new binary is ", nbinver)
 
 	if oldver != nbinver {
-		Log("MIGRATION NEEDED!")
-		return nil
+		Log("Migration required")
+		return RunMigration(oldver, nbinver)
 	}
 
 	VLog("  - no migration required")
@@ -195,8 +196,7 @@ func RunMigration(oldv, newv string) error {
 	migrateBin := "fs-repo-migrations"
 	_, err := exec.LookPath(migrateBin)
 	if err != nil {
-		Error("could not find migrations binary: ", err)
-		return err
+		return fmt.Errorf("could not locate fs-repo-migrations binary")
 	}
 
 	cmd := exec.Command(migrateBin, "-to", newv, "-y")
@@ -375,8 +375,7 @@ func main() {
 			Action: func(c *cli.Context) {
 				vs, err := GetVersions(basehash)
 				if err != nil {
-					fmt.Println("Failed to query versions: ", err)
-					return
+					Fatal("Failed to query versions: ", err)
 				}
 
 				for _, v := range vs {
@@ -390,8 +389,7 @@ func main() {
 			Action: func(c *cli.Context) {
 				v, err := GetCurrentVersion()
 				if err != nil {
-					fmt.Println("Failed to check local version: ", err)
-					return
+					Fatal("Failed to check local version: ", err)
 				}
 
 				fmt.Println(v)
@@ -400,25 +398,28 @@ func main() {
 		{
 			Name:  "install",
 			Usage: "install a version of ipfs",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "no-check",
+					Usage: "skip running of pre-install tests",
+				},
+			},
 			Action: func(c *cli.Context) {
 				vers := c.Args().First()
 				if vers == "" {
-					fmt.Println("Please specify a version to install")
-					return
+					Fatal("Please specify a version to install")
 				}
 				if vers == "latest" {
 					latest, err := GetLatestVersion(basehash)
 					if err != nil {
-						fmt.Println("error resolving 'latest': ", err)
-						return
+						Fatal("error resolving 'latest': ", err)
 					}
 					vers = latest
 				}
 
 				err := InstallVersion(basehash, vers)
 				if err != nil {
-					fmt.Println(err)
-					return
+					Fatal(err)
 				}
 			},
 		},
@@ -436,16 +437,15 @@ binary and overwrite the current ipfs binary with it.`,
 
 				oldpath, err := ioutil.ReadFile(filepath.Join(ipfsDir(), "old-bin", "path-old"))
 				if err != nil {
-					fmt.Println("Path for previous installation could not be read: ", err)
-					return
+					Fatal("Path for previous installation could not be read: ", err)
 				}
 
 				binpath := string(oldpath)
 				err = InstallBinaryTo(oldbinpath, binpath)
 				if err != nil {
-					Error("failed to move old binary: %s\n", oldbinpath)
-					Log("to path: %s\n%s\n", binpath, err)
-					return
+					Error("failed to move old binary: %s", oldbinpath)
+					Error("to path: %s", binpath)
+					Fatal(err)
 				}
 			},
 		},

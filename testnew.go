@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -129,31 +130,35 @@ func StartDaemon(p, bin string) (io.Closer, error) {
 }
 
 func waitForApi(ipfspath string) error {
+	VLog("  - waiting on daemon to come online")
 	apifile := filepath.Join(ipfspath, "api")
 	var endpoint string
-	nloops := 25
+	nloops := 15
+	var success bool
 	for i := 0; i < nloops; i++ {
 		val, err := ioutil.ReadFile(apifile)
-		if os.IsNotExist(err) {
-			if i == nloops-1 {
-				return fmt.Errorf("failed to find api file")
-			}
-			time.Sleep(time.Millisecond * (100 * time.Duration(i+1)))
-
-			continue
-		} else if err != nil {
+		if err == nil {
+			VLog("  - found api file")
+			parts := strings.Split(string(val), "/")
+			port := parts[len(parts)-1]
+			endpoint = "localhost:" + port
+			success = true
+			break
+		}
+		if !os.IsNotExist(err) {
 			return err
 		}
 
-		endpoint = string(val)
-		break
+		time.Sleep(time.Millisecond * (100 * time.Duration(i+1)))
 	}
 
-	parts := strings.Split(endpoint, "/")
-	port := parts[len(parts)-1]
+	if !success {
+		VLog("  - no api file found, trying fallback (happens pre 0.3.8)")
+		endpoint = "localhost:5001"
+	}
 
 	for i := 0; i < 10; i++ {
-		_, err := net.Dial("tcp", "localhost:"+port)
+		_, err := net.Dial("tcp", endpoint)
 		if err == nil {
 			return nil
 		}
@@ -211,6 +216,11 @@ func TestBinary(bin, version string) error {
 		return fmt.Errorf("version didnt match")
 	}
 
+	if beforeVersion("v0.3.8", version) {
+		Log("== skipping tests with daemon, versions before 0.3.8 do not support port zero ==")
+		return nil
+	}
+
 	// set up ports in config so we dont interfere with an already running daemon
 	VLog("  - tweaking test config to avoid external interference")
 	err = tweakConfig(tdir)
@@ -229,6 +239,7 @@ func TestBinary(bin, version string) error {
 		if err != nil {
 			VLog("  - error killing test daemon: %s (continuing anyway)", err)
 		}
+		Log("success!")
 	}()
 
 	// test some basic things against the daemon
@@ -243,6 +254,28 @@ func TestBinary(bin, version string) error {
 	}
 
 	return nil
+}
+
+func beforeVersion(check, cur string) bool {
+	aparts := strings.Split(check[1:], ".")
+	bparts := strings.Split(cur[1:], ".")
+	for i := 0; i < 3; i++ {
+		an, err := strconv.Atoi(aparts[i])
+		if err != nil {
+			return false
+		}
+		bn, err := strconv.Atoi(bparts[i])
+		if err != nil {
+			return false
+		}
+		if bn < an {
+			return true
+		}
+		if bn > an {
+			return false
+		}
+	}
+	return false
 }
 
 func testFileAdd(tdir, bin string) error {
