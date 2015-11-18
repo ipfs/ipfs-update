@@ -43,6 +43,7 @@ func Fetch(ipfspath string) (io.ReadCloser, error) {
 	VLog("  - fetching %q", ipfspath)
 	sh := api.NewShell("http://localhost:5001")
 	if sh.IsUp() {
+		VLog("  - using local ipfs daemon for transfer")
 		return sh.Cat(ipfspath)
 	}
 
@@ -224,9 +225,18 @@ func RunMigration(oldv, newv string) error {
 	return nil
 }
 
+func Move(src, dest string) error {
+	err := CopyTo(src, dest)
+	if err != nil {
+		return err
+	}
+
+	return os.Remove(src)
+}
+
 func revertOldBinary(oldpath string) {
 	stashpath := filepath.Join(ipfsDir(), "old-bin", "ipfs-old")
-	rnerr := os.Rename(stashpath, oldpath)
+	rnerr := Move(stashpath, oldpath)
 	if rnerr != nil {
 		Log("error replacing binary after install fail: ", rnerr)
 		Log("sorry :(")
@@ -285,7 +295,7 @@ func StashOldBinary() (string, error) {
 	}
 
 	VLog("  - moving %s to %s", loc, npath)
-	err = os.Rename(loc, npath)
+	err = Move(loc, npath)
 	if err != nil {
 		return "", fmt.Errorf("could not move old binary: %s", err)
 	}
