@@ -40,6 +40,7 @@ func httpFetch(url string) (io.ReadCloser, error) {
 }
 
 func Fetch(ipfspath string) (io.ReadCloser, error) {
+	VLog("  - fetching %q", ipfspath)
 	sh := api.NewShell("http://localhost:5001")
 	if sh.IsUp() {
 		return sh.Cat(ipfspath)
@@ -152,11 +153,16 @@ func InstallVersion(root, v string, nocheck bool) error {
 		return err
 	}
 
-	err = CheckMigration()
-	if err != nil {
-		Error("Migration Failed: ", err)
-		revertOldBinary(oldpath)
-		return err
+	if beforeVersion("v0.3.10", v) {
+		VLog("  - ipfs pre v0.3.10 does not support checking of repo version through the tool")
+		VLog("  - if a migration is needed, you will be prompted when starting ipfs")
+	} else {
+		err := CheckMigration()
+		if err != nil {
+			Error("Migration Failed: ", err)
+			revertOldBinary(oldpath)
+			return err
+		}
 	}
 
 	return nil
@@ -308,6 +314,7 @@ func GetBinaryForVersion(root, vers, target string) error {
 		return err
 	}
 
+	VLog("  - writing to", zippath)
 	_, err = io.Copy(fi, data)
 	if err != nil {
 		return err
@@ -337,6 +344,7 @@ func GetBinaryForVersion(root, vers, target string) error {
 		return fmt.Errorf("no ipfs binary found in downloaded archive")
 	}
 
+	VLog("  - extracting binary to tempdir: ", target)
 	binfi, err := os.Create(target)
 	if err != nil {
 		return fmt.Errorf("error opening tmp bin path '%s': %s", target, err)
@@ -424,6 +432,7 @@ func main() {
 				if err != nil {
 					Fatal(err)
 				}
+				Log("\ninstallation complete.")
 			},
 		},
 		{
