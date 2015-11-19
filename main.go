@@ -303,6 +303,11 @@ func StashOldBinary() (string, error) {
 	return loc, nil
 }
 
+func hasDaemonRunning() bool {
+	shell := api.NewShell("localhost:5001")
+	return shell.IsUp()
+}
+
 func GetBinaryForVersion(root, vers, target string) error {
 	dir, err := ioutil.TempDir("", "ipfs-update")
 	if err != nil {
@@ -443,6 +448,10 @@ func main() {
 					Fatal(err)
 				}
 				Log("\ninstallation complete.")
+
+				if hasDaemonRunning() {
+					Log("remember to restart your daemon before continuing")
+				}
 			},
 		},
 		{
@@ -491,7 +500,16 @@ binary and overwrite the current ipfs binary with it.`,
 					output = ofl
 				}
 
-				err := GetBinaryForVersion(basehash, vers, output)
+				_, err := os.Stat(output)
+				if err == nil {
+					Fatal("file named %s already exists")
+				}
+
+				if !os.IsNotExist(err) {
+					Fatal("stat(%s)", output, err)
+				}
+
+				err = GetBinaryForVersion(basehash, vers, output)
 				if err != nil {
 					Fatal("Failed to fetch binary: ", err)
 				}
