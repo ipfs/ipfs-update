@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -96,6 +97,11 @@ func GetCurrentVersion() (string, error) {
 
 	VLog("daemon check failed: %s", err)
 
+	_, err = exec.LookPath("ipfs")
+	if err != nil {
+		return "none", nil
+	}
+
 	// try running the ipfs binary in the users path
 	out, err := exec.Command("ipfs", "version", "-n").CombinedOutput()
 	if err != nil {
@@ -115,6 +121,15 @@ func GetLatestVersion(ipfspath string) (string, error) {
 }
 
 func InstallVersion(root, v string, nocheck bool) error {
+	currentVersion, err := GetCurrentVersion()
+	if err != nil {
+		return err
+	}
+
+	if currentVersion == "none" {
+		VLog("no pre-existing ipfs installation found")
+	}
+
 	Log("installing ipfs version %s", v)
 	tmpd, err := ioutil.TempDir("", "ipfs-update")
 	if err != nil {
@@ -140,7 +155,7 @@ func InstallVersion(root, v string, nocheck bool) error {
 	}
 
 	Log("stashing old binary")
-	oldpath, err := StashOldBinary()
+	oldpath, err := StashOldBinary(currentVersion)
 	if err != nil {
 		return err
 	}
@@ -150,7 +165,7 @@ func InstallVersion(root, v string, nocheck bool) error {
 	if err != nil {
 		// in case of error here, replace old binary
 		Error("Install failed: ", err)
-		revertOldBinary(oldpath)
+		revertOldBinary(oldpath, currentVersion)
 		return err
 	}
 
@@ -161,7 +176,7 @@ func InstallVersion(root, v string, nocheck bool) error {
 		err := CheckMigration()
 		if err != nil {
 			Error("Migration Failed: ", err)
-			revertOldBinary(oldpath)
+			revertOldBinary(oldpath, currentVersion)
 			return err
 		}
 	}
@@ -234,8 +249,8 @@ func Move(src, dest string) error {
 	return os.Remove(src)
 }
 
-func revertOldBinary(oldpath string) {
-	stashpath := filepath.Join(ipfsDir(), "old-bin", "ipfs-old")
+func revertOldBinary(oldpath, version string) {
+	stashpath := filepath.Join(ipfsDir(), "old-bin", "ipfs-"+version)
 	rnerr := Move(stashpath, oldpath)
 	if rnerr != nil {
 		Log("error replacing binary after install fail: ", rnerr)
@@ -271,7 +286,7 @@ func ipfsDir() string {
 
 // StashOldBinary moves the existing ipfs binary to a backup directory
 // and returns the path to the original location of the old binary
-func StashOldBinary() (string, error) {
+func StashOldBinary(v string) (string, error) {
 	loc, err := exec.LookPath("ipfs")
 	if err != nil {
 		return "", fmt.Errorf("could not find old binary: %s", err)
@@ -280,7 +295,7 @@ func StashOldBinary() (string, error) {
 	ipfsdir := ipfsDir()
 
 	olddir := filepath.Join(ipfsdir, "old-bin")
-	npath := filepath.Join(olddir, "ipfs-old")
+	npath := filepath.Join(olddir, "ipfs-"+v)
 	pathpath := filepath.Join(olddir, "path-old")
 
 	err = os.MkdirAll(olddir, 0700)
@@ -314,6 +329,7 @@ func GetBinaryForVersion(root, vers, target string) error {
 		return err
 	}
 
+	VLog("  - using GOOS=%s and GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 	finame := fmt.Sprintf("go-ipfs_%s_%s-%s.zip", vers, runtime.GOOS, runtime.GOARCH)
 
 	ipfspath := fmt.Sprintf("%s/go-ipfs/%s/%s", root, vers, finame)
@@ -372,6 +388,53 @@ func GetBinaryForVersion(root, vers, target string) error {
 	}
 
 	return nil
+}
+
+func selectRevertBin() (string, error) {
+	oldbinpath := filepath.Join(ipfsDir(), "old-bin")
+	_, err := os.Stat(oldbinpath)
+	if os.IsNotExist(err) {
+		return "", fmt.Errorf("No prior binary found at: %s", oldbinpath)
+	}
+
+	entries, err := ioutil.ReadDir(oldbinpath)
+	if err != nil {
+		return "", err
+	}
+
+	switch len(entries) {
+	case 0:
+		return "", fmt.Errorf("no prior binary found")
+	case 1:
+		return filepath.Join(oldbinpath, entries[0].Name()), nil
+	default:
+	}
+
+	for i, e := range entries {
+		if e.Name() == "path-old" {
+			entries = append(entries[:i], entries[i+1:]...)
+			break
+		}
+	}
+
+	Log("found multiple old binaries:")
+	for i, bin := range entries {
+		Log("%d) %s", i+1, bin.Name())
+	}
+
+	Log("install which? ")
+	scan := bufio.NewScanner(os.Stdin)
+	for scan.Scan() {
+		n, err := strconv.Atoi(scan.Text())
+		if err != nil || n < 1 || n > len(entries) {
+			Log("please enter a number in the range 1-%d", len(entries))
+			continue
+		}
+
+		Log("installing %s...", entries[n-1].Name())
+		return filepath.Join(oldbinpath, entries[n-1].Name()), nil
+	}
+	return "", fmt.Errorf("failed to select binary")
 }
 
 func main() {
@@ -460,10 +523,9 @@ func main() {
 			Description: `revert will check if a previous update left a stashed
 binary and overwrite the current ipfs binary with it.`,
 			Action: func(c *cli.Context) {
-				oldbinpath := filepath.Join(ipfsDir(), "old-bin", "ipfs-old")
-				_, err := os.Stat(oldbinpath)
-				if os.IsNotExist(err) {
-					Fatal("No prior binary found at:", err)
+				oldbinpath, err := selectRevertBin()
+				if err != nil {
+					Fatal(err)
 				}
 
 				oldpath, err := ioutil.ReadFile(filepath.Join(ipfsDir(), "old-bin", "path-old"))
