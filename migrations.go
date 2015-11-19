@@ -1,0 +1,163 @@
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+
+	. "github.com/whyrusleeping/stump"
+)
+
+func CheckMigration() error {
+	Log("checking if repo migration is needed...")
+	p := ipfsDir()
+	oldverB, err := ioutil.ReadFile(filepath.Join(p, "version"))
+	if err != nil {
+		return err
+	}
+
+	oldver := strings.Trim(string(oldverB), "\n \t")
+	VLog("  - old repo version is", oldver)
+
+	nbinver, err := runCmd("", "ipfs", "version", "--repo")
+	if err != nil {
+		Log("Failed to check new binary repo version.")
+		VLog("Reason: ", err)
+		Log("This is not an error.")
+		Log("This just means that you may have to manually run the migration")
+		Log("You will be prompted to do so upon starting the ipfs daemon if necessary")
+		return nil
+	}
+
+	VLog("  - repo version of new binary is ", nbinver)
+
+	if oldver != nbinver {
+		Log("  - Migration required")
+		return RunMigration(oldver, nbinver)
+	}
+
+	VLog("  - no migration required")
+
+	return nil
+}
+
+func RunMigration(oldv, newv string) error {
+	migrateBin := "fs-repo-migrations"
+	VLog("  - checking for migrations binary...")
+	_, err := exec.LookPath(migrateBin)
+	if err != nil {
+		VLog("  - migrations not found on system, attempting to install")
+		err := GetMigrations()
+		if err != nil {
+			return err
+		}
+	}
+
+	// check to make sure migrations binary supports our target version
+	err = verifyMigrationSupportsVersion(newv)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command(migrateBin, "-to", newv, "-y")
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	Log("running migration: '%s -to %s -y'", migrateBin, newv)
+
+	err = cmd.Run()
+	if err != nil {
+		return fmt.Errorf("migration failed: %s", err)
+	}
+
+	Log("migration succeeded!")
+	return nil
+}
+
+func GetMigrations() error {
+	// first, check if go is installed
+	_, err := exec.LookPath("go")
+	if err == nil {
+		return getMigrationsGoGet()
+	}
+
+	// TODO: try and fetch from gobuilder
+	Log("could not find or install fs-repo-migrations, please manually install it")
+	Log("before running ipfs-update again.")
+	return fmt.Errorf("failed to find migrations binary")
+}
+
+func getMigrationsGoGet() error {
+	VLog("  - fetching migrations using 'go get'")
+	cmd := exec.Command("go", "get", "-u", "github.com/ipfs/fs-repo-migrations")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s %s", string(out), err)
+	}
+	VLog("  - success. verifying...")
+
+	// verify we can see the binary now
+	p, err := exec.LookPath("fs-repo-migrations")
+	if err != nil {
+		return fmt.Errorf("install succeeded, but failed to find binary afterwards. (%s)", err)
+	}
+	VLog("  - fs-repo-migrations now installed at %s", p)
+
+	return nil
+}
+
+func verifyMigrationSupportsVersion(v string) error {
+	VLog("  - verifying migration supports version %s", v)
+	vn, err := strconv.Atoi(v)
+	if err != nil {
+		return fmt.Errorf("given migration version was not a number: %q", v)
+	}
+
+	sn, err := migrationsVersion()
+	if err != nil {
+		return err
+	}
+
+	if sn >= vn {
+		return nil
+	}
+
+	VLog("  - migrations doesnt support version %s, attempting to update")
+	err = GetMigrations()
+	if err != nil {
+		return err
+	}
+
+	VLog("  - migrations updated")
+
+	sn, err = migrationsVersion()
+	if err != nil {
+		return err
+	}
+
+	if sn >= vn {
+		return nil
+	}
+
+	return fmt.Errorf("no known migration supports version %s", v)
+}
+
+func migrationsVersion() (int, error) {
+	out, err := exec.Command("fs-repo-migrations", "-v").CombinedOutput()
+	if err != nil {
+		return 0, fmt.Errorf("failed to check migrations version")
+	}
+
+	vs := strings.Trim(string(out), " \n\t")
+	vn, err := strconv.Atoi(vs)
+	if err != nil {
+		return 0, fmt.Errorf("migrations binary version check did not return a number")
+	}
+
+	return vn, nil
+}

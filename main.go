@@ -2,123 +2,19 @@ package main
 
 import (
 	"archive/zip"
-	"bufio"
 	"fmt"
-	cli "github.com/codegangsta/cli"
-	api "github.com/ipfs/go-ipfs-api"
-	. "github.com/whyrusleeping/stump"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
-	"strings"
+
+	cli "github.com/codegangsta/cli"
+	. "github.com/whyrusleeping/stump"
 )
 
 var gateway = "https://ipfs.io"
-
-func httpFetch(url string) (io.ReadCloser, error) {
-	VLog("fetching url: %s", url)
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("http.Get error: %s", err)
-	}
-
-	if resp.StatusCode >= 400 {
-		Error("fetching resource: %s", resp.Status)
-		mes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("error reading error body: %s", err)
-		}
-
-		return nil, fmt.Errorf("%s: %s", resp.Status, string(mes))
-	}
-
-	return resp.Body, nil
-}
-
-func Fetch(ipfspath string) (io.ReadCloser, error) {
-	VLog("  - fetching %q", ipfspath)
-	sh := api.NewShell("http://localhost:5001")
-	if sh.IsUp() {
-		VLog("  - using local ipfs daemon for transfer")
-		return sh.Cat(ipfspath)
-	}
-
-	return httpFetch(gateway + ipfspath)
-}
-
-// This function is needed because os.Rename doesnt work across filesystem
-// boundaries.
-func CopyTo(src, dest string) error {
-	VLog("  - copying %s to %s", src, dest)
-	fi, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer fi.Close()
-
-	trgt, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
-	defer trgt.Close()
-
-	_, err = io.Copy(trgt, fi)
-	return err
-}
-
-func GetVersions(ipfspath string) ([]string, error) {
-	rc, err := Fetch(ipfspath + "/go-ipfs/versions")
-	if err != nil {
-		return nil, err
-	}
-	defer rc.Close()
-
-	var out []string
-	scan := bufio.NewScanner(rc)
-	for scan.Scan() {
-		out = append(out, scan.Text())
-	}
-
-	return out, nil
-}
-
-func GetCurrentVersion() (string, error) {
-	// try checking a locally running daemon first
-	sh := api.NewShell("http://localhost:5001")
-	v, _, err := sh.Version()
-	if err == nil {
-		return v, nil
-	}
-
-	VLog("daemon check failed: %s", err)
-
-	_, err = exec.LookPath("ipfs")
-	if err != nil {
-		return "none", nil
-	}
-
-	// try running the ipfs binary in the users path
-	out, err := exec.Command("ipfs", "version", "-n").CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("version check failed: %s - %s", string(out), err)
-	}
-
-	return string(out), nil
-}
-
-func GetLatestVersion(ipfspath string) (string, error) {
-	vs, err := GetVersions(ipfspath)
-	if err != nil {
-		return "", err
-	}
-
-	return vs[len(vs)-1], nil
-}
 
 func InstallVersion(root, v string, nocheck bool) error {
 	currentVersion, err := GetCurrentVersion()
@@ -184,81 +80,6 @@ func InstallVersion(root, v string, nocheck bool) error {
 	return nil
 }
 
-func CheckMigration() error {
-	Log("checking if repo migration is needed...")
-	p := ipfsDir()
-	oldverB, err := ioutil.ReadFile(filepath.Join(p, "version"))
-	if err != nil {
-		return err
-	}
-
-	oldver := strings.Trim(string(oldverB), "\n \t")
-	VLog("  - old repo version is", oldver)
-
-	nbinver, err := runCmd("", "ipfs", "version", "--repo")
-	if err != nil {
-		Log("Failed to check new binary repo version.")
-		VLog("Reason: ", err)
-		Log("This is not an error.")
-		Log("This just means that you may have to manually run the migration")
-		Log("You will be prompted to do so upon starting the ipfs daemon if necessary")
-		return nil
-	}
-
-	VLog("  - repo version of new binary is ", nbinver)
-
-	if oldver != nbinver {
-		Log("  - Migration required")
-		return RunMigration(oldver, nbinver)
-	}
-
-	VLog("  - no migration required")
-
-	return nil
-}
-
-func RunMigration(oldv, newv string) error {
-	migrateBin := "fs-repo-migrations"
-	_, err := exec.LookPath(migrateBin)
-	if err != nil {
-		return fmt.Errorf("could not locate fs-repo-migrations binary")
-	}
-
-	cmd := exec.Command(migrateBin, "-to", newv, "-y")
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	Log("running migration: '%s -to %s -y'", migrateBin, newv)
-
-	err = cmd.Run()
-	if err != nil {
-		return fmt.Errorf("migration failed: %s", err)
-	}
-
-	Log("migration succeeded!")
-	return nil
-}
-
-func Move(src, dest string) error {
-	err := CopyTo(src, dest)
-	if err != nil {
-		return err
-	}
-
-	return os.Remove(src)
-}
-
-func revertOldBinary(oldpath, version string) {
-	stashpath := filepath.Join(ipfsDir(), "old-bin", "ipfs-"+version)
-	rnerr := Move(stashpath, oldpath)
-	if rnerr != nil {
-		Log("error replacing binary after install fail: ", rnerr)
-		Log("sorry :(")
-		Log("your old ipfs binary should still be located at: ", stashpath)
-	}
-}
-
 func InstallBinaryTo(nbin, nloc string) error {
 	err := CopyTo(nbin, nloc)
 	if err != nil {
@@ -271,17 +92,6 @@ func InstallBinaryTo(nbin, nloc string) error {
 	}
 
 	return nil
-}
-
-func ipfsDir() string {
-	def := filepath.Join(os.Getenv("HOME"), ".ipfs")
-
-	ipfs_path := os.Getenv("IPFS_PATH")
-	if ipfs_path != "" {
-		def = ipfs_path
-	}
-
-	return def
 }
 
 // StashOldBinary moves the existing ipfs binary to a backup directory
@@ -316,11 +126,6 @@ func StashOldBinary(v string) (string, error) {
 	}
 
 	return loc, nil
-}
-
-func hasDaemonRunning() bool {
-	shell := api.NewShell("localhost:5001")
-	return shell.IsUp()
 }
 
 func GetBinaryForVersion(root, vers, target string) error {
@@ -388,53 +193,6 @@ func GetBinaryForVersion(root, vers, target string) error {
 	}
 
 	return nil
-}
-
-func selectRevertBin() (string, error) {
-	oldbinpath := filepath.Join(ipfsDir(), "old-bin")
-	_, err := os.Stat(oldbinpath)
-	if os.IsNotExist(err) {
-		return "", fmt.Errorf("No prior binary found at: %s", oldbinpath)
-	}
-
-	entries, err := ioutil.ReadDir(oldbinpath)
-	if err != nil {
-		return "", err
-	}
-
-	switch len(entries) {
-	case 0:
-		return "", fmt.Errorf("no prior binary found")
-	case 1:
-		return filepath.Join(oldbinpath, entries[0].Name()), nil
-	default:
-	}
-
-	for i, e := range entries {
-		if e.Name() == "path-old" {
-			entries = append(entries[:i], entries[i+1:]...)
-			break
-		}
-	}
-
-	Log("found multiple old binaries:")
-	for i, bin := range entries {
-		Log("%d) %s", i+1, bin.Name())
-	}
-
-	Log("install which? ")
-	scan := bufio.NewScanner(os.Stdin)
-	for scan.Scan() {
-		n, err := strconv.Atoi(scan.Text())
-		if err != nil || n < 1 || n > len(entries) {
-			Log("please enter a number in the range 1-%d", len(entries))
-			continue
-		}
-
-		Log("installing %s...", entries[n-1].Name())
-		return filepath.Join(oldbinpath, entries[n-1].Name()), nil
-	}
-	return "", fmt.Errorf("failed to select binary")
 }
 
 func main() {
