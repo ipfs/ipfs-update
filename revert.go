@@ -52,11 +52,15 @@ func selectRevertBin() (string, error) {
 	for i, bin := range entries {
 		Log("%d) %s", i+1, bin.Name())
 	}
+	Log("\n0) quit")
 
 	Log("install which? ")
 	scan := bufio.NewScanner(os.Stdin)
 	for scan.Scan() {
 		n, err := strconv.Atoi(scan.Text())
+		if n == 0 {
+			return "", fmt.Errorf("exiting at user request")
+		}
 		if err != nil || n < 1 || n > len(entries) {
 			Log("please enter a number in the range 1-%d", len(entries))
 			continue

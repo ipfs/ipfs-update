@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	api "github.com/ipfs/go-ipfs-api"
 	. "github.com/whyrusleeping/stump"
@@ -46,7 +47,7 @@ func GetCurrentVersion() (string, error) {
 		return "", fmt.Errorf("version check failed: %s - %s", string(out), err)
 	}
 
-	return string(out), nil
+	return strings.Trim(string(out), " \n\t"), nil
 }
 
 func GetLatestVersion(ipfspath string) (string, error) {
