@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"text/tabwriter"
+	"time"
 
 	. "github.com/whyrusleeping/stump"
 )
@@ -49,12 +51,13 @@ func selectRevertBin() (string, error) {
 	}
 
 	Log("found multiple old binaries:")
+	tw := tabwriter.NewWriter(os.Stdout, 6, 4, 4, ' ', 0)
 	for i, bin := range entries {
-		Log("%d) %s", i+1, bin.Name())
+		fmt.Fprintf(tw, "%d)\t%s\t%s\n", i+1, bin.Name(), bin.ModTime().Format(time.ANSIC))
 	}
-	Log("\n0) quit")
+	tw.Flush()
 
-	Log("install which? ")
+	Log("install which? (0 to exit)")
 	scan := bufio.NewScanner(os.Stdin)
 	for scan.Scan() {
 		n, err := strconv.Atoi(scan.Text())
