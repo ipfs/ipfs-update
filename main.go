@@ -51,7 +51,7 @@ func InstallVersion(root, v string, nocheck bool) error {
 	}
 
 	Log("stashing old binary")
-	oldpath, err := StashOldBinary(currentVersion)
+	oldpath, err := StashOldBinary(currentVersion, false)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func InstallBinaryTo(nbin, nloc string) error {
 
 // StashOldBinary moves the existing ipfs binary to a backup directory
 // and returns the path to the original location of the old binary
-func StashOldBinary(v string) (string, error) {
+func StashOldBinary(tag string, keep bool) (string, error) {
 	loc, err := exec.LookPath("ipfs")
 	if err != nil {
 		return "", fmt.Errorf("could not find old binary: %s", err)
@@ -105,7 +105,7 @@ func StashOldBinary(v string) (string, error) {
 	ipfsdir := ipfsDir()
 
 	olddir := filepath.Join(ipfsdir, "old-bin")
-	npath := filepath.Join(olddir, "ipfs-"+v)
+	npath := filepath.Join(olddir, "ipfs-"+tag)
 	pathpath := filepath.Join(olddir, "path-old")
 
 	err = os.MkdirAll(olddir, 0700)
@@ -119,8 +119,13 @@ func StashOldBinary(v string) (string, error) {
 		return "", fmt.Errorf("couldnt stash path: ", err)
 	}
 
+	f := Move
+	if keep {
+		f = CopyTo
+	}
+
 	VLog("  - moving %s to %s", loc, npath)
-	err = Move(loc, npath)
+	err = f(loc, npath)
 	if err != nil {
 		return "", fmt.Errorf("could not move old binary: %s", err)
 	}
@@ -272,6 +277,31 @@ func main() {
 
 				if hasDaemonRunning() {
 					Log("remember to restart your daemon before continuing")
+				}
+			},
+		},
+		{
+			Name:  "stash",
+			Usage: "stashes copy of currently installed ipfs binary",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "tag",
+					Usage: "optionally specify tag for stashed binary",
+				},
+			},
+			Action: func(c *cli.Context) {
+				tag := c.String("tag")
+				if tag == "" {
+					vers, err := GetCurrentVersion()
+					if err != nil {
+						Fatal(err)
+					}
+					tag = vers
+				}
+
+				_, err := StashOldBinary(tag, true)
+				if err != nil {
+					Fatal(err)
 				}
 			},
 		},
