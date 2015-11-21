@@ -50,12 +50,10 @@ func InstallVersion(root, v string, nocheck bool) error {
 		Log("skipping tests since '--no-check' was passed")
 	}
 
-	if currentVersion != "none" {
-		Log("stashing old binary")
-		oldpath, err := StashOldBinary(currentVersion, false)
-		if err != nil {
-			return err
-		}
+	Log("stashing old binary")
+	oldpath, err := StashOldBinary(currentVersion, false)
+	if err != nil {
+		return err
 	}
 
 	Log("installing new binary to %s", oldpath)
