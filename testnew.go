@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/whyrusleeping/stump"
+	stump "github.com/whyrusleeping/stump"
 )
 
 func runCmd(p, bin string, args ...string) (string, error) {
@@ -40,13 +40,13 @@ type daemon struct {
 func (d *daemon) Close() error {
 	err := d.p.Kill()
 	if err != nil {
-		Error("error killing daemon: %s", err)
+		stump.Error("error killing daemon: %s", err)
 		return err
 	}
 
 	_, err = d.p.Wait()
 	if err != nil {
-		Error("error waiting on killed daemon: %s", err)
+		stump.Error("error waiting on killed daemon: %s", err)
 		return err
 	}
 
@@ -130,7 +130,7 @@ func StartDaemon(p, bin string) (io.Closer, error) {
 }
 
 func waitForApi(ipfspath string) error {
-	VLog("  - waiting on daemon to come online")
+	stump.VLog("  - waiting on daemon to come online")
 	apifile := filepath.Join(ipfspath, "api")
 	var endpoint string
 	nloops := 15
@@ -138,7 +138,7 @@ func waitForApi(ipfspath string) error {
 	for i := 0; i < nloops; i++ {
 		val, err := ioutil.ReadFile(apifile)
 		if err == nil {
-			VLog("  - found api file")
+			stump.VLog("  - found api file")
 			parts := strings.Split(string(val), "/")
 			port := parts[len(parts)-1]
 			endpoint = "localhost:" + port
@@ -153,7 +153,7 @@ func waitForApi(ipfspath string) error {
 	}
 
 	if !success {
-		VLog("  - no api file found, trying fallback (happens pre 0.3.8)")
+		stump.VLog("  - no api file found, trying fallback (happens pre 0.3.8)")
 		endpoint = "localhost:5001"
 	}
 
@@ -196,17 +196,17 @@ func TestBinary(bin, version string) error {
 		// defer cleanup, bound param to avoid mistakes
 		err = os.RemoveAll(dir)
 		if err != nil {
-			Error("error cleaning up staging directory: ", err)
+			stump.Error("error cleaning up staging directory: ", err)
 		}
 	}(tdir)
 
-	VLog("  - running init in '%s' with new binary", tdir)
+	stump.VLog("  - running init in '%s' with new binary", tdir)
 	_, err = runCmd(tdir, bin, "init")
 	if err != nil {
 		return fmt.Errorf("error initializing with new binary: %s", err)
 	}
 
-	VLog("  - checking new binary outputs correct version")
+	stump.VLog("  - checking new binary outputs correct version")
 	rversion, err := runCmd(tdir, bin, "version")
 	if err != nil {
 		return err
@@ -217,29 +217,29 @@ func TestBinary(bin, version string) error {
 	}
 
 	if beforeVersion("v0.3.8", version) {
-		Log("== skipping tests with daemon, versions before 0.3.8 do not support port zero ==")
+		stump.Log("== skipping tests with daemon, versions before 0.3.8 do not support port zero ==")
 		return nil
 	}
 
 	// set up ports in config so we dont interfere with an already running daemon
-	VLog("  - tweaking test config to avoid external interference")
+	stump.VLog("  - tweaking test config to avoid external interference")
 	err = tweakConfig(tdir)
 	if err != nil {
 		return err
 	}
 
-	VLog("  - starting up daemon")
+	stump.VLog("  - starting up daemon")
 	daemon, err := StartDaemon(tdir, bin)
 	if err != nil {
 		return fmt.Errorf("error starting daemon: %s", err)
 	}
 	defer func() {
-		VLog("  - killing test daemon")
+		stump.VLog("  - killing test daemon")
 		err := daemon.Close()
 		if err != nil {
-			VLog("  - error killing test daemon: %s (continuing anyway)", err)
+			stump.VLog("  - error killing test daemon: %s (continuing anyway)", err)
 		}
-		Log("success!")
+		stump.Log("success!")
 	}()
 
 	// test some basic things against the daemon
@@ -279,7 +279,7 @@ func beforeVersion(check, cur string) bool {
 }
 
 func testFileAdd(tdir, bin string) error {
-	VLog("  - checking that we can add and cat a file")
+	stump.VLog("  - checking that we can add and cat a file")
 	text := "hello world! This node should work"
 	data := bytes.NewBufferString(text)
 	c := exec.Command(bin, "add", "-q")
@@ -287,8 +287,8 @@ func testFileAdd(tdir, bin string) error {
 	c.Stdin = data
 	out, err := c.CombinedOutput()
 	if err != nil {
-		Error("testfileadd fail: %s", err)
-		Error(string(out))
+		stump.Error("testfileadd fail: %s", err)
+		stump.Error(string(out))
 		return err
 	}
 
@@ -306,13 +306,13 @@ func testFileAdd(tdir, bin string) error {
 }
 
 func testRefsList(tdir, bin string) error {
-	VLog("  - checking that file shows up in ipfs refs local")
+	stump.VLog("  - checking that file shows up in ipfs refs local")
 	c := exec.Command(bin, "refs", "local")
 	c.Env = []string{"IPFS_PATH=" + tdir}
 	out, err := c.CombinedOutput()
 	if err != nil {
-		Error("testfileadd fail: %s", err)
-		Error(string(out))
+		stump.Error("testfileadd fail: %s", err)
+		stump.Error(string(out))
 		return err
 	}
 

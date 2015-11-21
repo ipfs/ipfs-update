@@ -9,18 +9,18 @@ import (
 	"path/filepath"
 
 	api "github.com/ipfs/go-ipfs-api"
-	. "github.com/whyrusleeping/stump"
+	stump "github.com/whyrusleeping/stump"
 )
 
 func httpFetch(url string) (io.ReadCloser, error) {
-	VLog("fetching url: %s", url)
+	stump.VLog("fetching url: %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("http.Get error: %s", err)
 	}
 
 	if resp.StatusCode >= 400 {
-		Error("fetching resource: %s", resp.Status)
+		stump.Error("fetching resource: %s", resp.Status)
 		mes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("error reading error body: %s", err)
@@ -33,10 +33,10 @@ func httpFetch(url string) (io.ReadCloser, error) {
 }
 
 func Fetch(ipfspath string) (io.ReadCloser, error) {
-	VLog("  - fetching %q", ipfspath)
+	stump.VLog("  - fetching %q", ipfspath)
 	sh := api.NewShell("http://localhost:5001")
 	if sh.IsUp() {
-		VLog("  - using local ipfs daemon for transfer")
+		stump.VLog("  - using local ipfs daemon for transfer")
 		return sh.Cat(ipfspath)
 	}
 
@@ -46,7 +46,7 @@ func Fetch(ipfspath string) (io.ReadCloser, error) {
 // This function is needed because os.Rename doesnt work across filesystem
 // boundaries.
 func CopyTo(src, dest string) error {
-	VLog("  - copying %s to %s", src, dest)
+	stump.VLog("  - copying %s to %s", src, dest)
 	fi, err := os.Open(src)
 	if err != nil {
 		return err

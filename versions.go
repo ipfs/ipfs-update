@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	api "github.com/ipfs/go-ipfs-api"
-	. "github.com/whyrusleeping/stump"
+	stump "github.com/whyrusleeping/stump"
 )
 
 func GetVersions(ipfspath string) ([]string, error) {
@@ -34,7 +34,7 @@ func GetCurrentVersion() (string, error) {
 		return v, nil
 	}
 
-	VLog("daemon check failed: %s", err)
+	stump.VLog("daemon check failed: %s", err)
 
 	_, err = exec.LookPath("ipfs")
 	if err != nil {

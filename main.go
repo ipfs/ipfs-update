@@ -11,7 +11,7 @@ import (
 	"runtime"
 
 	cli "github.com/codegangsta/cli"
-	. "github.com/whyrusleeping/stump"
+	stump "github.com/whyrusleeping/stump"
 )
 
 var gateway = "https://ipfs.io"
@@ -23,10 +23,10 @@ func InstallVersion(root, v string, nocheck bool) error {
 	}
 
 	if currentVersion == "none" {
-		VLog("no pre-existing ipfs installation found")
+		stump.VLog("no pre-existing ipfs installation found")
 	}
 
-	Log("installing ipfs version %s", v)
+	stump.Log("installing ipfs version %s", v)
 	tmpd, err := ioutil.TempDir("", "ipfs-update")
 	if err != nil {
 		return err
@@ -34,44 +34,44 @@ func InstallVersion(root, v string, nocheck bool) error {
 
 	binpath := filepath.Join(tmpd, "ipfs-new")
 
-	Log("fetching %s binary...", v)
+	stump.Log("fetching %s binary...", v)
 	err = GetBinaryForVersion(root, v, binpath)
 	if err != nil {
 		return err
 	}
 
 	if !nocheck {
-		Log("binary downloaded, verifying...")
+		stump.Log("binary downloaded, verifying...")
 		err = TestBinary(binpath, v)
 		if err != nil {
 			return err
 		}
 	} else {
-		Log("skipping tests since '--no-check' was passed")
+		stump.Log("skipping tests since '--no-check' was passed")
 	}
 
-	Log("stashing old binary")
+	stump.Log("stashing old binary")
 	oldpath, err := StashOldBinary(currentVersion, false)
 	if err != nil {
 		return err
 	}
 
-	Log("installing new binary to %s", oldpath)
+	stump.Log("installing new binary to %s", oldpath)
 	err = InstallBinaryTo(binpath, oldpath)
 	if err != nil {
 		// in case of error here, replace old binary
-		Error("Install failed: ", err)
+		stump.Error("Install failed: ", err)
 		revertOldBinary(oldpath, currentVersion)
 		return err
 	}
 
 	if beforeVersion("v0.3.10", v) {
-		VLog("  - ipfs pre v0.3.10 does not support checking of repo version through the tool")
-		VLog("  - if a migration is needed, you will be prompted when starting ipfs")
+		stump.VLog("  - ipfs pre v0.3.10 does not support checking of repo version through the tool")
+		stump.VLog("  - if a migration is needed, you will be prompted when starting ipfs")
 	} else {
 		err := CheckMigration()
 		if err != nil {
-			Error("Migration Failed: ", err)
+			stump.Error("Migration Failed: ", err)
 			revertOldBinary(oldpath, currentVersion)
 			return err
 		}
@@ -124,7 +124,7 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 		f = CopyTo
 	}
 
-	VLog("  - moving %s to %s", loc, npath)
+	stump.VLog("  - moving %s to %s", loc, npath)
 	err = f(loc, npath)
 	if err != nil {
 		return "", fmt.Errorf("could not move old binary: %s", err)
@@ -139,7 +139,7 @@ func GetBinaryForVersion(root, vers, target string) error {
 		return err
 	}
 
-	VLog("  - using GOOS=%s and GOARCH=%s", runtime.GOOS, runtime.GOARCH)
+	stump.VLog("  - using GOOS=%s and GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 	finame := fmt.Sprintf("go-ipfs_%s_%s-%s.zip", vers, runtime.GOOS, runtime.GOARCH)
 
 	ipfspath := fmt.Sprintf("%s/go-ipfs/%s/%s", root, vers, finame)
@@ -155,7 +155,7 @@ func GetBinaryForVersion(root, vers, target string) error {
 		return err
 	}
 
-	VLog("  - writing to", zippath)
+	stump.VLog("  - writing to", zippath)
 	_, err = io.Copy(fi, data)
 	if err != nil {
 		return err
@@ -185,7 +185,7 @@ func GetBinaryForVersion(root, vers, target string) error {
 		return fmt.Errorf("no ipfs binary found in downloaded archive")
 	}
 
-	VLog("  - extracting binary to tempdir: ", target)
+	stump.VLog("  - extracting binary to tempdir: ", target)
 	binfi, err := os.Create(target)
 	if err != nil {
 		return fmt.Errorf("error opening tmp bin path '%s': %s", target, err)
@@ -216,7 +216,7 @@ func main() {
 	}
 
 	app.Before = func(c *cli.Context) error {
-		Verbose = c.Bool("verbose")
+		stump.Verbose = c.Bool("verbose")
 		return nil
 	}
 
@@ -227,7 +227,7 @@ func main() {
 			Action: func(c *cli.Context) {
 				vs, err := GetVersions(basehash)
 				if err != nil {
-					Fatal("Failed to query versions: ", err)
+					stump.Fatal("Failed to query versions: ", err)
 				}
 
 				for _, v := range vs {
@@ -241,7 +241,7 @@ func main() {
 			Action: func(c *cli.Context) {
 				v, err := GetCurrentVersion()
 				if err != nil {
-					Fatal("Failed to check local version: ", err)
+					stump.Fatal("Failed to check local version: ", err)
 				}
 
 				fmt.Println(v)
@@ -259,24 +259,24 @@ func main() {
 			Action: func(c *cli.Context) {
 				vers := c.Args().First()
 				if vers == "" {
-					Fatal("Please specify a version to install")
+					stump.Fatal("Please specify a version to install")
 				}
 				if vers == "latest" {
 					latest, err := GetLatestVersion(basehash)
 					if err != nil {
-						Fatal("error resolving 'latest': ", err)
+						stump.Fatal("error resolving 'latest': ", err)
 					}
 					vers = latest
 				}
 
 				err := InstallVersion(basehash, vers, c.Bool("no-check"))
 				if err != nil {
-					Fatal(err)
+					stump.Fatal(err)
 				}
-				Log("\ninstallation complete.")
+				stump.Log("\ninstallation complete.")
 
 				if hasDaemonRunning() {
-					Log("remember to restart your daemon before continuing")
+					stump.Log("remember to restart your daemon before continuing")
 				}
 			},
 		},
@@ -294,14 +294,14 @@ func main() {
 				if tag == "" {
 					vers, err := GetCurrentVersion()
 					if err != nil {
-						Fatal(err)
+						stump.Fatal(err)
 					}
 					tag = vers
 				}
 
 				_, err := StashOldBinary(tag, true)
 				if err != nil {
-					Fatal(err)
+					stump.Fatal(err)
 				}
 			},
 		},
@@ -313,20 +313,20 @@ binary and overwrite the current ipfs binary with it.`,
 			Action: func(c *cli.Context) {
 				oldbinpath, err := selectRevertBin()
 				if err != nil {
-					Fatal(err)
+					stump.Fatal(err)
 				}
 
 				oldpath, err := ioutil.ReadFile(filepath.Join(ipfsDir(), "old-bin", "path-old"))
 				if err != nil {
-					Fatal("Path for previous installation could not be read: ", err)
+					stump.Fatal("Path for previous installation could not be read: ", err)
 				}
 
 				binpath := string(oldpath)
 				err = InstallBinaryTo(oldbinpath, binpath)
 				if err != nil {
-					Error("failed to move old binary: %s", oldbinpath)
-					Error("to path: %s", binpath)
-					Fatal(err)
+					stump.Error("failed to move old binary: %s", oldbinpath)
+					stump.Error("to path: %s", binpath)
+					stump.Fatal(err)
 				}
 			},
 		},
@@ -338,7 +338,7 @@ binary and overwrite the current ipfs binary with it.`,
 				if vers == "" || vers == "latest" {
 					latest, err := GetLatestVersion(basehash)
 					if err != nil {
-						Fatal("error querying latest version: ", err)
+						stump.Fatal("error querying latest version: ", err)
 					}
 
 					vers = latest
@@ -352,21 +352,21 @@ binary and overwrite the current ipfs binary with it.`,
 
 				_, err := os.Stat(output)
 				if err == nil {
-					Fatal("file named %s already exists")
+					stump.Fatal("file named %s already exists")
 				}
 
 				if !os.IsNotExist(err) {
-					Fatal("stat(%s)", output, err)
+					stump.Fatal("stat(%s)", output, err)
 				}
 
 				err = GetBinaryForVersion(basehash, vers, output)
 				if err != nil {
-					Fatal("Failed to fetch binary: ", err)
+					stump.Fatal("Failed to fetch binary: ", err)
 				}
 
 				err = os.Chmod(output, 0755)
 				if err != nil {
-					Fatal("setting new binary executable: ", err)
+					stump.Fatal("setting new binary executable: ", err)
 				}
 			},
 			Flags: []cli.Flag{

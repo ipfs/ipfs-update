@@ -10,16 +10,16 @@ import (
 	"text/tabwriter"
 	"time"
 
-	. "github.com/whyrusleeping/stump"
+	stump "github.com/whyrusleeping/stump"
 )
 
 func revertOldBinary(oldpath, version string) {
 	stashpath := filepath.Join(ipfsDir(), "old-bin", "ipfs-"+version)
 	rnerr := Move(stashpath, oldpath)
 	if rnerr != nil {
-		Log("error replacing binary after install fail: ", rnerr)
-		Log("sorry :(")
-		Log("your old ipfs binary should still be located at: ", stashpath)
+		stump.Log("error replacing binary after install fail: ", rnerr)
+		stump.Log("sorry :(")
+		stump.Log("your old ipfs binary should still be located at: ", stashpath)
 	}
 }
 
@@ -50,14 +50,14 @@ func selectRevertBin() (string, error) {
 		}
 	}
 
-	Log("found multiple old binaries:")
+	stump.Log("found multiple old binaries:")
 	tw := tabwriter.NewWriter(os.Stdout, 6, 4, 4, ' ', 0)
 	for i, bin := range entries {
 		fmt.Fprintf(tw, "%d)\t%s\t%s\n", i+1, bin.Name(), bin.ModTime().Format(time.ANSIC))
 	}
 	tw.Flush()
 
-	Log("install which? (0 to exit)")
+	stump.Log("install which? (0 to exit)")
 	scan := bufio.NewScanner(os.Stdin)
 	for scan.Scan() {
 		n, err := strconv.Atoi(scan.Text())
@@ -65,11 +65,11 @@ func selectRevertBin() (string, error) {
 			return "", fmt.Errorf("exiting at user request")
 		}
 		if err != nil || n < 1 || n > len(entries) {
-			Log("please enter a number in the range 1-%d", len(entries))
+			stump.Log("please enter a number in the range 1-%d", len(entries))
 			continue
 		}
 
-		Log("installing %s...", entries[n-1].Name())
+		stump.Log("installing %s...", entries[n-1].Name())
 		return filepath.Join(oldbinpath, entries[n-1].Name()), nil
 	}
 	return "", fmt.Errorf("failed to select binary")
