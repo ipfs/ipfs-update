@@ -14,7 +14,11 @@ import (
 	stump "github.com/whyrusleeping/stump"
 )
 
-var gateway = "https://ipfs.io"
+var (
+	globalGatewayUrl = "https://ipfs.io"
+	localApiUrl      = "http://localhost:5001"
+	ipfsVersionPath  = "/ipfs/QmSiTko9JZyabH56y2fussEt1A5oDqsFXB3CkvAqraFryz"
+)
 
 func InstallVersion(root, v string, nocheck bool) error {
 	currentVersion, err := GetCurrentVersion()
@@ -206,8 +210,6 @@ func main() {
 	app.Usage = "update ipfs"
 	app.Version = "0.1.0"
 
-	basehash := "/ipfs/QmSiTko9JZyabH56y2fussEt1A5oDqsFXB3CkvAqraFryz"
-
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "verbose",
@@ -225,7 +227,7 @@ func main() {
 			Name:  "versions",
 			Usage: "print out all available versions",
 			Action: func(c *cli.Context) {
-				vs, err := GetVersions(basehash)
+				vs, err := GetVersions(ipfsVersionPath)
 				if err != nil {
 					stump.Fatal("Failed to query versions: ", err)
 				}
@@ -262,14 +264,14 @@ func main() {
 					stump.Fatal("Please specify a version to install")
 				}
 				if vers == "latest" {
-					latest, err := GetLatestVersion(basehash)
+					latest, err := GetLatestVersion(ipfsVersionPath)
 					if err != nil {
 						stump.Fatal("error resolving 'latest': ", err)
 					}
 					vers = latest
 				}
 
-				err := InstallVersion(basehash, vers, c.Bool("no-check"))
+				err := InstallVersion(ipfsVersionPath, vers, c.Bool("no-check"))
 				if err != nil {
 					stump.Fatal(err)
 				}
@@ -336,7 +338,7 @@ binary and overwrite the current ipfs binary with it.`,
 			Action: func(c *cli.Context) {
 				vers := c.Args().First()
 				if vers == "" || vers == "latest" {
-					latest, err := GetLatestVersion(basehash)
+					latest, err := GetLatestVersion(ipfsVersionPath)
 					if err != nil {
 						stump.Fatal("error querying latest version: ", err)
 					}
@@ -359,7 +361,7 @@ binary and overwrite the current ipfs binary with it.`,
 					stump.Fatal("stat(%s)", output, err)
 				}
 
-				err = GetBinaryForVersion(basehash, vers, output)
+				err = GetBinaryForVersion(ipfsVersionPath, vers, output)
 				if err != nil {
 					stump.Fatal("Failed to fetch binary: ", err)
 				}

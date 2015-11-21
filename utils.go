@@ -34,13 +34,13 @@ func httpFetch(url string) (io.ReadCloser, error) {
 
 func Fetch(ipfspath string) (io.ReadCloser, error) {
 	stump.VLog("  - fetching %q", ipfspath)
-	sh := api.NewShell("http://localhost:5001")
+	sh := api.NewShell(localApiUrl)
 	if sh.IsUp() {
 		stump.VLog("  - using local ipfs daemon for transfer")
 		return sh.Cat(ipfspath)
 	}
 
-	return httpFetch(gateway + ipfspath)
+	return httpFetch(globalGatewayUrl + ipfspath)
 }
 
 // This function is needed because os.Rename doesnt work across filesystem
@@ -84,6 +84,6 @@ func ipfsDir() string {
 }
 
 func hasDaemonRunning() bool {
-	shell := api.NewShell("localhost:5001")
+	shell := api.NewShell(localApiUrl)
 	return shell.IsUp()
 }
