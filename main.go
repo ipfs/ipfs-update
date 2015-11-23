@@ -163,6 +163,12 @@ binary and overwrite the current ipfs binary with it.`,
 var cmdFetch = cli.Command{
 	Name:  "fetch",
 	Usage: "fetch a given (default: latest) version of ipfs",
+	Flags: []cli.Flag{
+		cli.StringFlag{
+			Name:  "output",
+			Usage: "specify where to save the downloaded binary",
+		},
+	},
 	Action: func(c *cli.Context) {
 		vers := c.Args().First()
 		if vers == "" || vers == "latest" {
@@ -198,11 +204,5 @@ var cmdFetch = cli.Command{
 		if err != nil {
 			stump.Fatal("setting new binary executable: ", err)
 		}
-	},
-	Flags: []cli.Flag{
-		cli.StringFlag{
-			Name:  "output",
-			Usage: "specify where to save the downloaded binary",
-		},
 	},
 }

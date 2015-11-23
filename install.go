@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	stump "github.com/whyrusleeping/stump"
 )
@@ -47,18 +48,32 @@ func InstallVersion(root, v string, nocheck bool) error {
 		stump.Log("skipping tests since '--no-check' was passed")
 	}
 
-	stump.Log("stashing old binary")
-	oldpath, err := StashOldBinary(currentVersion, false)
-	if err != nil {
-		return err
+	var installPath string
+	if currentVersion != "none" {
+		stump.Log("stashing old binary")
+		oldpath, err := StashOldBinary(currentVersion, false)
+		if err != nil {
+			return err
+		}
+		installPath = oldpath
+	} else {
+		// need to select installation location
+		ipath, err := SelectGoodInstallLoc()
+		if err != nil {
+			return err
+		}
+
+		installPath = ipath
 	}
 
-	stump.Log("installing new binary to %s", oldpath)
-	err = InstallBinaryTo(binpath, oldpath)
+	stump.Log("installing new binary to %s", installPath)
+	err = InstallBinaryTo(binpath, installPath)
 	if err != nil {
 		// in case of error here, replace old binary
 		stump.Error("Install failed: ", err)
-		revertOldBinary(oldpath, currentVersion)
+		if currentVersion != "none" {
+			revertOldBinary(installPath, currentVersion)
+		}
 		return err
 	}
 
@@ -69,7 +84,7 @@ func InstallVersion(root, v string, nocheck bool) error {
 		err := CheckMigration()
 		if err != nil {
 			stump.Error("Migration Failed: ", err)
-			revertOldBinary(oldpath, currentVersion)
+			revertOldBinary(installPath, currentVersion)
 			return err
 		}
 	}
@@ -195,4 +210,52 @@ func GetBinaryForVersion(root, vers, target string) error {
 	}
 
 	return nil
+}
+
+var errNoGoodInstall = fmt.Errorf("could not find good install location")
+
+func SelectGoodInstallLoc() (string, error) {
+	// gopath setup? first choice
+	gopath := os.Getenv("GOPATH")
+	if gopath != "" {
+		return filepath.Join(gopath, "bin"), nil
+	}
+
+	common := []string{"/usr/local/bin"}
+	for _, dir := range common {
+		if canWrite(dir) && isInPath(dir) {
+			return dir, nil
+		}
+	}
+
+	// hrm, none of those worked. lets check home.
+	home := os.Getenv("HOME")
+	if home == "" {
+		return "", errNoGoodInstall
+	}
+
+	homebin := filepath.Join(home, "bin")
+	if canWrite(homebin) {
+		return homebin, nil
+	}
+	return "", errNoGoodInstall
+}
+
+func isInPath(dir string) bool {
+	return strings.Contains(os.Getenv("PATH"), dir)
+}
+
+func canWrite(dir string) bool {
+	fi, err := ioutil.TempFile(dir, ".ipfs-update-test")
+	if err != nil {
+		return false
+	}
+
+	_, err = fi.Write([]byte("test"))
+	if err != nil {
+		return false
+	}
+
+	_ = os.Remove(fi.Name())
+	return true
 }
