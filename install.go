@@ -84,7 +84,9 @@ func InstallVersion(root, v string, nocheck bool) error {
 		err := CheckMigration()
 		if err != nil {
 			stump.Error("Migration Failed: ", err)
-			revertOldBinary(installPath, currentVersion)
+			if currentVersion != "none" {
+				revertOldBinary(installPath, currentVersion)
+			}
 			return err
 		}
 	}
