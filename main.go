@@ -13,7 +13,7 @@ import (
 var (
 	globalGatewayUrl = "https://ipfs.io"
 	localApiUrl      = "http://localhost:5001"
-	ipfsVersionPath  = "/ipfs/QmSiTko9JZyabH56y2fussEt1A5oDqsFXB3CkvAqraFryz"
+	ipfsVersionPath  = "/ipns/update.ipfs.io"
 )
 
 func main() {
