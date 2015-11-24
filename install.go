@@ -63,7 +63,7 @@ func InstallVersion(root, v string, nocheck bool) error {
 			return err
 		}
 
-		installPath = ipath
+		installPath = filepath.Join(ipath, "ipfs")
 	}
 
 	stump.Log("installing new binary to %s", installPath)
