@@ -18,9 +18,11 @@ func revertOldBinary(oldpath, version string) {
 	stashpath := filepath.Join(util.IpfsDir(), "old-bin", "ipfs-"+version)
 	rnerr := util.Move(stashpath, oldpath)
 	if rnerr != nil {
-		stump.Log("error replacing binary after install fail: ", rnerr)
+		stump.Log("Error reverting")
+		stump.Log("failed to replace binary after install fail: ", rnerr)
 		stump.Log("sorry :(")
 		stump.Log("your old ipfs binary should still be located at: ", stashpath)
+		stump.Log("try: `mv %q %q`", stashpath, oldpath)
 	}
 }
 
