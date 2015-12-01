@@ -131,17 +131,14 @@ func StartDaemon(p, bin string) (io.Closer, error) {
 
 func waitForApi(ipfspath string) error {
 	stump.VLog("  - waiting on daemon to come online")
-	apifile := filepath.Join(ipfspath, "api")
 	var endpoint string
 	nloops := 15
 	var success bool
 	for i := 0; i < nloops; i++ {
-		val, err := ioutil.ReadFile(apifile)
+		ep, err := util.ApiEndpoint(ipfspath)
 		if err == nil {
 			stump.VLog("  - found api file")
-			parts := strings.Split(string(val), "/")
-			port := parts[len(parts)-1]
-			endpoint = "localhost:" + port
+			endpoint = ep
 			success = true
 			break
 		}

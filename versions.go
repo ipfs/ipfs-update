@@ -36,10 +36,13 @@ func GetCurrentVersion() (string, error) {
 	}
 
 	// try checking a locally running daemon first
-	sh := api.NewShell("http://localhost:5001")
-	v, _, err := sh.Version()
+	apiurl, err := util.ApiEndpoint(util.IpfsDir())
 	if err == nil {
-		return fix(v), nil
+		sh := api.NewShell(apiurl)
+		v, _, err := sh.Version()
+		if err == nil {
+			return fix(v), nil
+		}
 	}
 
 	stump.VLog("daemon check failed: %s", err)

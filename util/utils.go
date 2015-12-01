@@ -21,6 +21,22 @@ var (
 	IpfsVersionPath  = "/ipns/update.ipfs.io"
 )
 
+func ApiEndpoint(ipfspath string) (string, error) {
+	apifile := filepath.Join(ipfspath, "api")
+
+	val, err := ioutil.ReadFile(apifile)
+	if err != nil {
+		return "", err
+	}
+
+	parts := strings.Split(string(val), "/")
+	if len(parts) != 5 {
+		return "", fmt.Errorf("incorrectly formatted api string: %q", string(val))
+	}
+
+	return parts[2] + ":" + parts[4], nil
+}
+
 func httpFetch(url string) (io.ReadCloser, error) {
 	stump.VLog("fetching url: %s", url)
 	resp, err := http.Get(url)
@@ -43,10 +59,13 @@ func httpFetch(url string) (io.ReadCloser, error) {
 
 func Fetch(ipfspath string) (io.ReadCloser, error) {
 	stump.VLog("  - fetching %q", ipfspath)
-	sh := api.NewShell(LocalApiUrl)
-	if sh.IsUp() {
-		stump.VLog("  - using local ipfs daemon for transfer")
-		return sh.Cat(ipfspath)
+	ep, err := ApiEndpoint(IpfsDir())
+	if err == nil {
+		sh := api.NewShell(ep)
+		if sh.IsUp() {
+			stump.VLog("  - using local ipfs daemon for transfer")
+			return sh.Cat(ipfspath)
+		}
 	}
 
 	return httpFetch(GlobalGatewayUrl + ipfspath)
