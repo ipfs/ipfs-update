@@ -93,7 +93,6 @@ func newLimitReadCloser(rc io.ReadCloser, limit int64) io.ReadCloser {
 // This function is needed because os.Rename doesnt work across filesystem
 // boundaries.
 func CopyTo(src, dest string) error {
-	stump.VLog("  - copying %s to %s", src, dest)
 	fi, err := os.Open(src)
 	if err != nil {
 		return err

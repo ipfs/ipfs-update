@@ -92,7 +92,12 @@ var cmdInstall = cli.Command{
 			vers = latest
 		}
 
-		err := InstallVersion(util.IpfsVersionPath, vers, c.Bool("no-check"))
+		i, err := NewInstall(util.IpfsVersionPath, vers, c.Bool("no-check"))
+		if err != nil {
+			stump.Fatal(err)
+		}
+
+		err = i.Run()
 		if err != nil {
 			stump.Fatal(err)
 		}
@@ -175,6 +180,7 @@ var cmdFetch = cli.Command{
 	Action: func(c *cli.Context) {
 		vers := c.Args().First()
 		if vers == "" || vers == "latest" {
+			stump.VLog("looking up 'latest'")
 			latest, err := GetLatestVersion(util.IpfsVersionPath)
 			if err != nil {
 				stump.Fatal("error querying latest version: ", err)
