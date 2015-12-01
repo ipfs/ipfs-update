@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	cli "github.com/codegangsta/cli"
 	util "github.com/ipfs/ipfs-update/util"
@@ -90,6 +91,10 @@ var cmdInstall = cli.Command{
 				stump.Fatal("error resolving 'latest': ", err)
 			}
 			vers = latest
+		}
+		if !strings.HasPrefix(vers, "v") {
+			stump.VLog("version strings must start with 'v', autocorrecting...")
+			vers = "v" + vers
 		}
 
 		i, err := NewInstall(util.IpfsVersionPath, vers, c.Bool("no-check"))
@@ -187,6 +192,11 @@ var cmdFetch = cli.Command{
 			}
 
 			vers = latest
+		}
+
+		if !strings.HasPrefix(vers, "v") {
+			stump.VLog("version strings must start with 'v', autocorrecting...")
+			vers = "v" + vers
 		}
 
 		output := "ipfs-" + vers
