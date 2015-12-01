@@ -21,6 +21,8 @@ var (
 	IpfsVersionPath  = "/ipns/update.ipfs.io"
 )
 
+const fetchSizeLimit = 1024 * 1024 * 512
+
 func ApiEndpoint(ipfspath string) (string, error) {
 	apifile := filepath.Join(ipfspath, "api")
 
@@ -54,7 +56,7 @@ func httpFetch(url string) (io.ReadCloser, error) {
 		return nil, fmt.Errorf("%s: %s", resp.Status, string(mes))
 	}
 
-	return resp.Body, nil
+	return newLimitReadCloser(resp.Body, fetchSizeLimit), nil
 }
 
 func Fetch(ipfspath string) (io.ReadCloser, error) {
@@ -64,11 +66,28 @@ func Fetch(ipfspath string) (io.ReadCloser, error) {
 		sh := api.NewShell(ep)
 		if sh.IsUp() {
 			stump.VLog("  - using local ipfs daemon for transfer")
-			return sh.Cat(ipfspath)
+			rc, err := sh.Cat(ipfspath)
+			if err != nil {
+				return nil, err
+			}
+
+			return newLimitReadCloser(rc, fetchSizeLimit), nil
 		}
 	}
 
 	return httpFetch(GlobalGatewayUrl + ipfspath)
+}
+
+type limitReadCloser struct {
+	io.Reader
+	io.Closer
+}
+
+func newLimitReadCloser(rc io.ReadCloser, limit int64) io.ReadCloser {
+	return limitReadCloser{
+		Reader: io.LimitReader(rc, limit),
+		Closer: rc,
+	}
 }
 
 // This function is needed because os.Rename doesnt work across filesystem
