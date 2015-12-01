@@ -27,11 +27,18 @@ func GetVersions(ipfspath string) ([]string, error) {
 }
 
 func GetCurrentVersion() (string, error) {
+	fix := func(s string) string {
+		if !strings.HasPrefix(s, "v") {
+			s = "v" + s
+		}
+		return s
+	}
+
 	// try checking a locally running daemon first
 	sh := api.NewShell("http://localhost:5001")
 	v, _, err := sh.Version()
 	if err == nil {
-		return v, nil
+		return fix(v), nil
 	}
 
 	stump.VLog("daemon check failed: %s", err)
@@ -47,7 +54,7 @@ func GetCurrentVersion() (string, error) {
 		return "", fmt.Errorf("version check failed: %s - %s", string(out), err)
 	}
 
-	return strings.Trim(string(out), " \n\t"), nil
+	return fix(strings.Trim(string(out), " \n\t")), nil
 }
 
 func GetLatestVersion(ipfspath string) (string, error) {
