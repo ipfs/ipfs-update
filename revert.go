@@ -54,7 +54,7 @@ func selectRevertBin() (string, error) {
 	}
 
 	stump.Log("found multiple old binaries:")
-	tw := tabwriter.NewWriter(os.Stdout, 6, 4, 4, ' ', 0)
+	tw := tabwriter.NewWriter(stump.LogOut, 6, 4, 4, ' ', 0)
 	for i, bin := range entries {
 		fmt.Fprintf(tw, "%d)\t%s\t%s\n", i+1, bin.Name(), bin.ModTime().Format(time.ANSIC))
 	}
@@ -68,7 +68,7 @@ func selectRevertBin() (string, error) {
 			return "", fmt.Errorf("exiting at user request")
 		}
 		if err != nil || n < 1 || n > len(entries) {
-			stump.Log("please enter a number in the range 1-%d", len(entries))
+			stump.Log("please enter a number in the range 1-%d (0 to exit)", len(entries))
 			continue
 		}
 

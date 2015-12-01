@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -66,8 +65,8 @@ func RunMigration(oldv, newv string) error {
 
 	cmd := exec.Command(migrateBin, "-to", newv, "-y")
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = stump.LogOut
+	cmd.Stderr = stump.ErrOut
 
 	stump.Log("running migration: '%s -to %s -y'", migrateBin, newv)
 
