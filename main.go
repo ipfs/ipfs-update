@@ -7,13 +7,8 @@ import (
 	"path/filepath"
 
 	cli "github.com/codegangsta/cli"
+	util "github.com/ipfs/ipfs-update/util"
 	stump "github.com/whyrusleeping/stump"
-)
-
-var (
-	globalGatewayUrl = "https://ipfs.io"
-	localApiUrl      = "http://localhost:5001"
-	ipfsVersionPath  = "/ipns/update.ipfs.io"
 )
 
 func main() {
@@ -51,7 +46,7 @@ var cmdVersions = cli.Command{
 	Usage:     "print out all available versions",
 	ArgsUsage: " ",
 	Action: func(c *cli.Context) {
-		vs, err := GetVersions(ipfsVersionPath)
+		vs, err := GetVersions(util.IpfsVersionPath)
 		if err != nil {
 			stump.Fatal("Failed to query versions: ", err)
 		}
@@ -90,20 +85,20 @@ var cmdInstall = cli.Command{
 			stump.Fatal("Please specify a version to install")
 		}
 		if vers == "latest" {
-			latest, err := GetLatestVersion(ipfsVersionPath)
+			latest, err := GetLatestVersion(util.IpfsVersionPath)
 			if err != nil {
 				stump.Fatal("error resolving 'latest': ", err)
 			}
 			vers = latest
 		}
 
-		err := InstallVersion(ipfsVersionPath, vers, c.Bool("no-check"))
+		err := InstallVersion(util.IpfsVersionPath, vers, c.Bool("no-check"))
 		if err != nil {
 			stump.Fatal(err)
 		}
 		stump.Log("\ninstallation complete.")
 
-		if hasDaemonRunning() {
+		if util.HasDaemonRunning() {
 			stump.Log("remember to restart your daemon before continuing")
 		}
 	},
@@ -152,7 +147,7 @@ var cmdRevert = cli.Command{
 			stump.Fatal(err)
 		}
 
-		oldpath, err := ioutil.ReadFile(filepath.Join(ipfsDir(), "old-bin", "path-old"))
+		oldpath, err := ioutil.ReadFile(filepath.Join(util.IpfsDir(), "old-bin", "path-old"))
 		if err != nil {
 			stump.Fatal("Path for previous installation could not be read: ", err)
 		}
@@ -180,7 +175,7 @@ var cmdFetch = cli.Command{
 	Action: func(c *cli.Context) {
 		vers := c.Args().First()
 		if vers == "" || vers == "latest" {
-			latest, err := GetLatestVersion(ipfsVersionPath)
+			latest, err := GetLatestVersion(util.IpfsVersionPath)
 			if err != nil {
 				stump.Fatal("error querying latest version: ", err)
 			}
@@ -203,7 +198,7 @@ var cmdFetch = cli.Command{
 			stump.Fatal("stat(%s)", output, err)
 		}
 
-		err = GetBinaryForVersion(ipfsVersionPath, vers, output)
+		err = GetBinaryForVersion(util.IpfsVersionPath, vers, output)
 		if err != nil {
 			stump.Fatal("Failed to fetch binary: ", err)
 		}

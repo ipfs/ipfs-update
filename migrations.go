@@ -9,12 +9,13 @@ import (
 	"strconv"
 	"strings"
 
+	util "github.com/ipfs/ipfs-update/util"
 	stump "github.com/whyrusleeping/stump"
 )
 
 func CheckMigration() error {
 	stump.Log("checking if repo migration is needed...")
-	p := ipfsDir()
+	p := util.IpfsDir()
 	oldverB, err := ioutil.ReadFile(filepath.Join(p, "version"))
 	if err != nil {
 		return err
@@ -23,7 +24,7 @@ func CheckMigration() error {
 	oldver := strings.Trim(string(oldverB), "\n \t")
 	stump.VLog("  - old repo version is", oldver)
 
-	nbinver, err := runCmd("", "ipfs", "version", "--repo")
+	nbinver, err := util.RunCmd("", "ipfs", "version", "--repo")
 	if err != nil {
 		stump.Log("Failed to check new binary repo version.")
 		stump.VLog("Reason: ", err)

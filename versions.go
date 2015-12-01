@@ -7,11 +7,12 @@ import (
 	"strings"
 
 	api "github.com/ipfs/go-ipfs-api"
+	util "github.com/ipfs/ipfs-update/util"
 	stump "github.com/whyrusleeping/stump"
 )
 
 func GetVersions(ipfspath string) ([]string, error) {
-	rc, err := Fetch(ipfspath + "/go-ipfs/versions")
+	rc, err := util.Fetch(ipfspath + "/go-ipfs/versions")
 	if err != nil {
 		return nil, err
 	}

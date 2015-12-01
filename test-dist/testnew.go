@@ -1,4 +1,4 @@
-package main
+package testdist
 
 import (
 	"bytes"
@@ -10,10 +10,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
+	util "github.com/ipfs/ipfs-update/util"
 	stump "github.com/whyrusleeping/stump"
 )
 
@@ -176,7 +176,7 @@ func TestBinary(bin, version string) error {
 		return err
 	}
 
-	staging := filepath.Join(ipfsDir(), "update-staging")
+	staging := filepath.Join(util.IpfsDir(), "update-staging")
 	err = os.MkdirAll(staging, 0755)
 	if err != nil {
 		return fmt.Errorf("error creating test staging directory: %s", err)
@@ -216,7 +216,7 @@ func TestBinary(bin, version string) error {
 		return fmt.Errorf("version didnt match")
 	}
 
-	if beforeVersion("v0.3.8", version) {
+	if util.BeforeVersion("v0.3.8", version) {
 		stump.Log("== skipping tests with daemon, versions before 0.3.8 do not support port zero ==")
 		return nil
 	}
@@ -254,28 +254,6 @@ func TestBinary(bin, version string) error {
 	}
 
 	return nil
-}
-
-func beforeVersion(check, cur string) bool {
-	aparts := strings.Split(check[1:], ".")
-	bparts := strings.Split(cur[1:], ".")
-	for i := 0; i < 3; i++ {
-		an, err := strconv.Atoi(aparts[i])
-		if err != nil {
-			return false
-		}
-		bn, err := strconv.Atoi(bparts[i])
-		if err != nil {
-			return false
-		}
-		if bn < an {
-			return true
-		}
-		if bn > an {
-			return false
-		}
-	}
-	return false
 }
 
 func testFileAdd(tdir, bin string) error {

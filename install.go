@@ -11,6 +11,8 @@ import (
 	"runtime"
 	"strings"
 
+	test "github.com/ipfs/ipfs-update/test-dist"
+	util "github.com/ipfs/ipfs-update/util"
 	stump "github.com/whyrusleeping/stump"
 )
 
@@ -40,7 +42,7 @@ func InstallVersion(root, v string, nocheck bool) error {
 
 	if !nocheck {
 		stump.Log("binary downloaded, verifying...")
-		err = TestBinary(binpath, v)
+		err = test.TestBinary(binpath, v)
 		if err != nil {
 			return err
 		}
@@ -77,7 +79,7 @@ func InstallVersion(root, v string, nocheck bool) error {
 		return err
 	}
 
-	if beforeVersion("v0.3.10", v) {
+	if util.BeforeVersion("v0.3.10", v) {
 		stump.VLog("  - ipfs pre v0.3.10 does not support checking of repo version through the tool")
 		stump.VLog("  - if a migration is needed, you will be prompted when starting ipfs")
 	} else {
@@ -95,7 +97,7 @@ func InstallVersion(root, v string, nocheck bool) error {
 }
 
 func InstallBinaryTo(nbin, nloc string) error {
-	err := CopyTo(nbin, nloc)
+	err := util.CopyTo(nbin, nloc)
 	if err != nil {
 		return fmt.Errorf("error moving new binary into place: %s", err)
 	}
@@ -116,7 +118,7 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 		return "", fmt.Errorf("could not find old binary: %s", err)
 	}
 
-	ipfsdir := ipfsDir()
+	ipfsdir := util.IpfsDir()
 
 	olddir := filepath.Join(ipfsdir, "old-bin")
 	npath := filepath.Join(olddir, "ipfs-"+tag)
@@ -133,9 +135,9 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 		return "", fmt.Errorf("couldnt stash path: ", err)
 	}
 
-	f := Move
+	f := util.Move
 	if keep {
-		f = CopyTo
+		f = util.CopyTo
 	}
 
 	stump.VLog("  - moving %s to %s", loc, npath)
@@ -158,7 +160,7 @@ func GetBinaryForVersion(root, vers, target string) error {
 
 	ipfspath := fmt.Sprintf("%s/go-ipfs/%s/%s", root, vers, finame)
 
-	data, err := Fetch(ipfspath)
+	data, err := util.Fetch(ipfspath)
 	if err != nil {
 		return err
 	}

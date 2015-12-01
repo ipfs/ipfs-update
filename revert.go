@@ -10,12 +10,13 @@ import (
 	"text/tabwriter"
 	"time"
 
+	util "github.com/ipfs/ipfs-update/util"
 	stump "github.com/whyrusleeping/stump"
 )
 
 func revertOldBinary(oldpath, version string) {
-	stashpath := filepath.Join(ipfsDir(), "old-bin", "ipfs-"+version)
-	rnerr := Move(stashpath, oldpath)
+	stashpath := filepath.Join(util.IpfsDir(), "old-bin", "ipfs-"+version)
+	rnerr := util.Move(stashpath, oldpath)
 	if rnerr != nil {
 		stump.Log("error replacing binary after install fail: ", rnerr)
 		stump.Log("sorry :(")
@@ -24,7 +25,7 @@ func revertOldBinary(oldpath, version string) {
 }
 
 func selectRevertBin() (string, error) {
-	oldbinpath := filepath.Join(ipfsDir(), "old-bin")
+	oldbinpath := filepath.Join(util.IpfsDir(), "old-bin")
 	_, err := os.Stat(oldbinpath)
 	if os.IsNotExist(err) {
 		return "", fmt.Errorf("No prior binary found at: %s", oldbinpath)
