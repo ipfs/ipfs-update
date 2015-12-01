@@ -112,6 +112,9 @@ var cmdInstall = cli.Command{
 var cmdStash = cli.Command{
 	Name:  "stash",
 	Usage: "stashes copy of currently installed ipfs binary",
+	Description: `stash is an advanced command that saves the currently installed
+   version of ipfs to a backup location. This is useful when you want to experiment
+   with different versions but still be able to go back to the version you started from.`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "tag",
