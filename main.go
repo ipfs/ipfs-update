@@ -47,8 +47,9 @@ func main() {
 }
 
 var cmdVersions = cli.Command{
-	Name:  "versions",
-	Usage: "print out all available versions",
+	Name:      "versions",
+	Usage:     "print out all available versions",
+	ArgsUsage: " ",
 	Action: func(c *cli.Context) {
 		vs, err := GetVersions(ipfsVersionPath)
 		if err != nil {
@@ -135,10 +136,13 @@ var cmdStash = cli.Command{
 }
 
 var cmdRevert = cli.Command{
-	Name:  "revert",
-	Usage: "revert to previously installed version of ipfs",
+	Name:      "revert",
+	Usage:     "revert to previously installed version of ipfs",
+	ArgsUsage: " ",
 	Description: `revert will check if a previous update left a stashed
-binary and overwrite the current ipfs binary with it.`,
+   binary and overwrite the current ipfs binary with it.
+   if multiple previous versions exist, you will be prompted to select the
+   desired binary.`,
 	Action: func(c *cli.Context) {
 		oldbinpath, err := selectRevertBin()
 		if err != nil {
@@ -161,8 +165,9 @@ binary and overwrite the current ipfs binary with it.`,
 }
 
 var cmdFetch = cli.Command{
-	Name:  "fetch",
-	Usage: "fetch a given (default: latest) version of ipfs",
+	Name:      "fetch",
+	Usage:     "fetch a given (default: latest) version of ipfs",
+	ArgsUsage: "<version>",
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "output",
