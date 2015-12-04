@@ -23,9 +23,11 @@ TEST_TRASH_DIR=$(pwd)
 TEST_SCRIPTS_DIR=$(dirname "$TEST_TRASH_DIR")
 APP_ROOT_DIR=$(dirname "$TEST_SCRIPTS_DIR")
 
+CERTIFS='/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt'
+
 # This writes a docker ID on stdout
 start_docker() {
-	docker run -it -d -v "$APP_ROOT_DIR:/mnt" -w "/mnt" "$DOCKER_IMG" /bin/bash
+	docker run -it -d -v "$CERTIFS" -v "$APP_ROOT_DIR:/mnt" -w "/mnt" "$DOCKER_IMG" /bin/bash
 }
 
 # This takes a docker ID and a command as arguments
