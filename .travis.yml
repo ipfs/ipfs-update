@@ -1,0 +1,22 @@
+# dist: trusty # KVM Setup
+
+# For now only "linux" as it looks like docker
+# is not available on "osx"
+os:
+  - linux
+
+language: go
+
+go:
+    - 1.5.2
+
+script:
+  - cd sharness
+  - make
+
+# For docker containers
+
+sudo: required
+
+services:
+  - docker
