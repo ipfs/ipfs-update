@@ -14,7 +14,6 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Author = "whyrusleeping"
 	app.Usage = "update ipfs"
 	app.Version = "0.1.0"
 
@@ -207,7 +206,7 @@ var cmdFetch = cli.Command{
 
 		_, err := os.Stat(output)
 		if err == nil {
-			stump.Fatal("file named %s already exists")
+			stump.Fatal("file named %q already exists", output)
 		}
 
 		if !os.IsNotExist(err) {
