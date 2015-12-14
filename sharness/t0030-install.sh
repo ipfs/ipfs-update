@@ -11,7 +11,7 @@ test_expect_success "start a docker container" '
 '
 
 test_expect_success "'ipfs-update install' works" '
-	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE install v0.3.9" >actual 2>&1 ||
+	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install v0.3.9" >actual 2>&1 ||
 	test_fsh cat actual
 '
 
@@ -28,8 +28,8 @@ test_expect_success "'ipfs-update version' output looks good" '
 	test_cmp expected actual
 '
 
-test_expect_failure "'ipfs-update install' works when something is installed" '
-	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE install v0.3.8" >actual 2>&1 ||
+test_expect_success "'ipfs-update install' works when something is installed" '
+	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install v0.3.8" >actual 2>&1 ||
 	test_fsh cat actual
 '
 
@@ -41,7 +41,7 @@ test_expect_success "'ipfs-update version' works" '
 	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE version" >actual
 '
 
-test_expect_failure "'ipfs-update version' output looks good" '
+test_expect_success "'ipfs-update version' output looks good" '
 	echo "v0.3.8" >expected &&
 	test_cmp expected actual
 '
