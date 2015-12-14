@@ -142,7 +142,7 @@ func (i *Install) MaybeStash() error {
 			}
 			return err
 		}
-		i.StashedFromPath = oldpath
+		i.StashedFromPath = filepath.Dir(oldpath)
 	} else {
 		stump.VLog("skipping stash, no previous install")
 	}
