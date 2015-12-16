@@ -8,6 +8,11 @@
 
 SHARNESS_LIB="lib/sharness/sharness.sh"
 
+# Set sharness verbosity. we set the env var directly as
+# it's too late to pass in --verbose, and --verbose is harder
+# to pass through in some cases.
+test "$TEST_VERBOSE" = 1 && verbose=t && echo '# TEST_VERBOSE='"$TEST_VERBOSE"
+
 . "$SHARNESS_LIB" || {
 	echo >&2 "Cannot source: $SHARNESS_LIB"
 	echo >&2 "Please check Sharness installation."
