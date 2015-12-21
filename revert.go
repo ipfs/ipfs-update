@@ -38,19 +38,19 @@ func selectRevertBin() (string, error) {
 		return "", err
 	}
 
+	for i, e := range entries {
+		if e.Name() == "path-old" {
+			entries = append(entries[:i], entries[i+1:]...)
+			break
+		}
+	}
+
 	switch len(entries) {
 	case 0:
 		return "", fmt.Errorf("no prior binary found")
 	case 1:
 		return filepath.Join(oldbinpath, entries[0].Name()), nil
 	default:
-	}
-
-	for i, e := range entries {
-		if e.Name() == "path-old" {
-			entries = append(entries[:i], entries[i+1:]...)
-			break
-		}
 	}
 
 	stump.Log("found multiple old binaries:")
