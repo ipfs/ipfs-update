@@ -156,6 +156,7 @@ var cmdRevert = cli.Command{
 			stump.Fatal(err)
 		}
 
+		stump.Log("reverting to %s", oldbinpath)
 		oldpath, err := ioutil.ReadFile(filepath.Join(util.IpfsDir(), "old-bin", "path-old"))
 		if err != nil {
 			stump.Fatal("Path for previous installation could not be read: ", err)
@@ -168,6 +169,7 @@ var cmdRevert = cli.Command{
 			stump.Error("to path: %s", binpath)
 			stump.Fatal(err)
 		}
+		stump.Log("\nrevert complete.")
 	},
 }
 
