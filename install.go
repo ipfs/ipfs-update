@@ -229,7 +229,7 @@ func (i *Install) DownloadNewBinary() error {
 }
 
 func GetBinaryForVersion(root, vers, out string) error {
-	stump.Log("installing ipfs version %s", vers)
+	stump.Log("fetching ipfs version %s", vers)
 	dir, err := ioutil.TempDir("", "ipfs-update")
 	if err != nil {
 		return err
