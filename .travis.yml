@@ -8,7 +8,10 @@ os:
 language: go
 
 go:
-    - 1.5.2
+  - 1.5.2
+
+env:
+  - TEST_VERBOSE=1
 
 script:
   - cd sharness

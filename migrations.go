@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -15,7 +16,15 @@ import (
 func CheckMigration() error {
 	stump.Log("checking if repo migration is needed...")
 	p := util.IpfsDir()
-	oldverB, err := ioutil.ReadFile(filepath.Join(p, "version"))
+
+	vfilePath := filepath.Join(p, "version")
+	_, err := os.Stat(vfilePath)
+	if os.IsNotExist(err) {
+		stump.VLog("  - no prexisting repo to migrate")
+		return nil
+	}
+
+	oldverB, err := ioutil.ReadFile(vfilePath)
 	if err != nil {
 		return err
 	}
