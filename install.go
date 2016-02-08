@@ -1,7 +1,6 @@
 package main
 
 import (
-	"archive/zip"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -236,7 +235,14 @@ func GetBinaryForVersion(root, vers, out string) error {
 	}
 
 	stump.VLog("  - using GOOS=%s and GOARCH=%s", runtime.GOOS, runtime.GOARCH)
-	finame := fmt.Sprintf("go-ipfs_%s_%s-%s.zip", vers, runtime.GOOS, runtime.GOARCH)
+	var archive string
+	switch runtime.GOOS {
+	case "windows":
+		archive = "zip"
+	default:
+		archive = "tar.gz"
+	}
+	finame := fmt.Sprintf("go-ipfs_%s_%s-%s.%s", vers, runtime.GOOS, runtime.GOARCH, archive)
 
 	ipfspath := fmt.Sprintf("%s/go-ipfs/%s/%s", root, vers, finame)
 
@@ -245,55 +251,20 @@ func GetBinaryForVersion(root, vers, out string) error {
 		return err
 	}
 
-	zippath := filepath.Join(dir, finame)
-	fi, err := os.Create(zippath)
+	arcpath := filepath.Join(dir, finame)
+	fi, err := os.Create(arcpath)
 	if err != nil {
 		return err
 	}
 
-	stump.VLog("  - writing to", zippath)
+	stump.VLog("  - writing to", arcpath)
 	_, err = io.Copy(fi, data)
 	if err != nil {
 		return err
 	}
 	fi.Close()
 
-	zipr, err := zip.OpenReader(zippath)
-	if err != nil {
-		return fmt.Errorf("error opening zipreader: %s", err)
-	}
-
-	defer zipr.Close()
-
-	var bin io.ReadCloser
-	for _, fis := range zipr.File {
-		if fis.Name == "ipfs/ipfs" {
-			rc, err := fis.Open()
-			if err != nil {
-				return fmt.Errorf("error extracting binary from archive: %s", err)
-			}
-
-			bin = rc
-		}
-	}
-
-	if bin == nil {
-		return fmt.Errorf("no ipfs binary found in downloaded archive")
-	}
-
-	stump.VLog("  - extracting binary to tempdir: ", out)
-	binfi, err := os.Create(out)
-	if err != nil {
-		return fmt.Errorf("error opening tmp bin path '%s': %s", out, err)
-	}
-	defer binfi.Close()
-
-	_, err = io.Copy(binfi, bin)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpackArchive(arcpath, out, archive)
 }
 
 func (i *Install) SelectGoodInstallLoc() error {

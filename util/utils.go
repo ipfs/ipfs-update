@@ -18,7 +18,7 @@ import (
 var (
 	GlobalGatewayUrl = "https://ipfs.io"
 	LocalApiUrl      = "http://localhost:5001"
-	IpfsVersionPath  = "/ipns/update.ipfs.io"
+	IpfsVersionPath  = "/ipns/dist.ipfs.io"
 )
 
 const fetchSizeLimit = 1024 * 1024 * 512

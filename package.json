@@ -1,0 +1,9 @@
+{
+  "name": "ipfs-update",
+  "author": "whyrusleeping",
+  "version": "1.0.0",
+  "language": "go",
+  "go": {
+    "dvcsimport": "github.com/ipfs/ipfs-update"
+  }
+}

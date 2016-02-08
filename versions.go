@@ -66,6 +66,15 @@ func GetLatestVersion(ipfspath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	var latest string
+	for i := len(vs) - 1; i >= 0; i-- {
+		if !strings.Contains(vs[i], "-dev") {
+			latest = vs[i]
+			break
+		}
+	}
+	if latest == "" {
+		return "", fmt.Errorf("couldnt find a non dev version in the list")
+	}
 	return vs[len(vs)-1], nil
 }

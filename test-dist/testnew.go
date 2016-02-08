@@ -167,8 +167,13 @@ func waitForApi(ipfspath string) error {
 }
 
 func TestBinary(bin, version string) error {
+	_, err := os.Stat(bin)
+	if err != nil {
+		return err
+	}
+
 	// make sure binary is executable
-	err := os.Chmod(bin, 0755)
+	err = os.Chmod(bin, 0755)
 	if err != nil {
 		return err
 	}
