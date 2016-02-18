@@ -20,8 +20,8 @@ test_expect_success "'ipfs-update revert' works" '
 '
 
 test_expect_success "'ipfs-update revert' output looks good" '
-	grep "reverting to" actual &&
-	grep "revert complete." actual ||
+	grep "Reverting to" actual &&
+	grep "Revert complete." actual ||
 	test_fsh cat actual
 '
 
