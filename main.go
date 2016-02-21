@@ -12,6 +12,10 @@ import (
 	stump "github.com/whyrusleeping/stump"
 )
 
+func init() {
+	stump.ErrOut = os.Stderr
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Usage = "update ipfs"
