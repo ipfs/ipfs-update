@@ -136,7 +136,7 @@ func HasDaemonRunning() bool {
 
 func RunCmd(p, bin string, args ...string) (string, error) {
 	cmd := exec.Command(bin, args...)
-	cmd.Env = []string{"IPFS_PATH=" + p}
+	cmd.Env = append(os.Environ(), "IPFS_PATH="+p)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("%s: %s", err, string(out))
