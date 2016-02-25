@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	api "github.com/ipfs/go-ipfs-api"
+	config "github.com/ipfs/ipfs-update/config"
 	stump "github.com/whyrusleeping/stump"
 )
 
@@ -39,11 +40,27 @@ func ApiEndpoint(ipfspath string) (string, error) {
 	return parts[2] + ":" + parts[4], nil
 }
 
+func httpGet(url string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("http.NewRequest error: %s", err)
+	}
+
+	req.Header.Set("User-Agent", config.GetUserAgent())
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("http.DefaultClient.Do error: %s", err)
+	}
+
+	return resp, nil
+}
+
 func httpFetch(url string) (io.ReadCloser, error) {
 	stump.VLog("fetching url: %s", url)
-	resp, err := http.Get(url)
+	resp, err := httpGet(url)
 	if err != nil {
-		return nil, fmt.Errorf("http.Get error: %s", err)
+		return nil, err
 	}
 
 	if resp.StatusCode >= 400 {

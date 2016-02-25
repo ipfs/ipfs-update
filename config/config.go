@@ -11,4 +11,13 @@ const CurrentVersionNumber = "0.1.0"
 // add a Makefile and set it as a ldflag in the Makefile.
 var CurrentCommit string
 
+func GetUserAgent() string {
+	ua := CurrentAppName + "/" + CurrentVersionNumber
+
+	if CurrentCommit != "" {
+		ua += "-" + CurrentCommit
+	}
+
+	return ua
+}
 
