@@ -97,7 +97,7 @@ func GetMigrations() error {
 		return getMigrationsGoGet()
 	}
 
-	latest, err := GetLatestVersion("", migrations)
+	latest, err := GetLatestVersion(util.IpfsVersionPath, migrations)
 	if err != nil {
 		return fmt.Errorf("getting latest version of fs-repo-migrations: %s", err)
 	}
