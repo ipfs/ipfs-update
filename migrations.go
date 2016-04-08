@@ -93,12 +93,6 @@ func RunMigration(oldv, newv string) error {
 }
 
 func GetMigrations() (string, error) {
-	// first, check if go is installed
-	_, err := exec.LookPath("go")
-	if err == nil {
-		return getMigrationsGoGet()
-	}
-
 	latest, err := GetLatestVersion(util.IpfsVersionPath, migrations)
 	if err != nil {
 		return "", fmt.Errorf("getting latest version of fs-repo-migrations: %s", err)
