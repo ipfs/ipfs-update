@@ -11,18 +11,18 @@ import (
 	stump "github.com/whyrusleeping/stump"
 )
 
-func unpackArchive(path, out, atype string) error {
+func unpackArchive(dist, binnom, path, out, atype string) error {
 	switch atype {
 	case "zip":
-		return unpackZip(path, out)
+		return unpackZip(dist, binnom, path, out)
 	case "tar.gz":
-		return unpackTgz(path, out)
+		return unpackTgz(dist, binnom, path, out)
 	default:
 		return fmt.Errorf("unrecognized archive type: %s", atype)
 	}
 }
 
-func unpackTgz(path, out string) error {
+func unpackTgz(dist, binnom, path, out string) error {
 	fi, err := os.Open(path)
 	if err != nil {
 		return err
@@ -51,14 +51,14 @@ loop:
 			// continue
 		}
 
-		if th.Name == "go-ipfs/ipfs" {
+		if th.Name == dist+"/"+binnom {
 			bin = tarr
 			break
 		}
 	}
 
 	if bin == nil {
-		return fmt.Errorf("no ipfs binary found in downloaded archive")
+		return fmt.Errorf("no binary found in downloaded archive")
 	}
 
 	return writeToPath(bin, out)
@@ -80,7 +80,7 @@ func writeToPath(rc io.Reader, out string) error {
 	return nil
 }
 
-func unpackZip(path, out string) error {
+func unpackZip(dist, binnom, path, out string) error {
 	stump.VLog("  - unpacking zip to %q", out)
 	zipr, err := zip.OpenReader(path)
 	if err != nil {
@@ -91,7 +91,7 @@ func unpackZip(path, out string) error {
 
 	var bin io.ReadCloser
 	for _, fis := range zipr.File {
-		if fis.Name == "go-ipfs/ipfs.exe" {
+		if fis.Name == dist+"/"+binnom+".exe" {
 			rc, err := fis.Open()
 			if err != nil {
 				return fmt.Errorf("error extracting binary from archive: %s", err)

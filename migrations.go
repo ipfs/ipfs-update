@@ -13,6 +13,8 @@ import (
 	stump "github.com/whyrusleeping/stump"
 )
 
+const migrations = "fs-repo-migrations"
+
 func CheckMigration() error {
 	stump.Log("checking if repo migration is needed...")
 	p := util.IpfsDir()
@@ -95,10 +97,28 @@ func GetMigrations() error {
 		return getMigrationsGoGet()
 	}
 
-	// TODO: try and fetch from gobuilder
-	stump.Log("could not find or install fs-repo-migrations, please manually install it")
-	stump.Log("before running ipfs-update again.")
-	return fmt.Errorf("failed to find migrations binary")
+	latest, err := GetLatestVersion("", migrations)
+	if err != nil {
+		return fmt.Errorf("getting latest version of fs-repo-migrations: %s", err)
+	}
+
+	dir, err := ioutil.TempDir("", "ipfs-update-migrate")
+	if err != nil {
+		return fmt.Errorf("tempdir: %s", err)
+	}
+
+	out := filepath.Join(dir, migrations)
+
+	err = GetBinaryForVersion(migrations, migrations, util.IpfsVersionPath, latest, out)
+	if err != nil {
+		stump.Error("getting migrations binary: %s", err)
+
+		stump.Log("could not find or install fs-repo-migrations, please manually install it")
+		stump.Log("before running ipfs-update again.")
+		return fmt.Errorf("failed to find migrations binary")
+	}
+
+	return nil
 }
 
 func getMigrationsGoGet() error {

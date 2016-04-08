@@ -11,8 +11,8 @@ import (
 	stump "github.com/whyrusleeping/stump"
 )
 
-func GetVersions(ipfspath string) ([]string, error) {
-	rc, err := util.Fetch(ipfspath + "/go-ipfs/versions")
+func GetVersions(ipfspath, dist string) ([]string, error) {
+	rc, err := util.Fetch(ipfspath + "/" + dist + "/versions")
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +61,8 @@ func GetCurrentVersion() (string, error) {
 	return fix(strings.Trim(string(out), " \n\t")), nil
 }
 
-func GetLatestVersion(ipfspath string) (string, error) {
-	vs, err := GetVersions(ipfspath)
+func GetLatestVersion(ipfspath, dist string) (string, error) {
+	vs, err := GetVersions(ipfspath, dist)
 	if err != nil {
 		return "", err
 	}

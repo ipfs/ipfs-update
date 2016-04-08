@@ -218,7 +218,7 @@ func (i *Install) DownloadNewBinary() error {
 		return err
 	}
 
-	err = GetBinaryForVersion(i.UrlRoot, i.TargetVers, out)
+	err = GetBinaryForVersion("go-ipfs", "ipfs", i.UrlRoot, i.TargetVers, out)
 	if err != nil {
 		return err
 	}
@@ -227,8 +227,8 @@ func (i *Install) DownloadNewBinary() error {
 	return nil
 }
 
-func GetBinaryForVersion(root, vers, out string) error {
-	stump.Log("fetching ipfs version %s", vers)
+func GetBinaryForVersion(distname, binnom, root, vers, out string) error {
+	stump.Log("fetching %s version %s", distname, vers)
 	dir, err := ioutil.TempDir("", "ipfs-update")
 	if err != nil {
 		return err
@@ -242,11 +242,11 @@ func GetBinaryForVersion(root, vers, out string) error {
 	default:
 		archive = "tar.gz"
 	}
-	finame := fmt.Sprintf("go-ipfs_%s_%s-%s.%s", vers, runtime.GOOS, runtime.GOARCH, archive)
+	finame := fmt.Sprintf("%s_%s_%s-%s.%s", distname, vers, runtime.GOOS, runtime.GOARCH, archive)
 
-	ipfspath := fmt.Sprintf("%s/go-ipfs/%s/%s", root, vers, finame)
+	distpath := fmt.Sprintf("%s/%s/%s/%s", root, distname, vers, finame)
 
-	data, err := util.Fetch(ipfspath)
+	data, err := util.Fetch(distpath)
 	if err != nil {
 		return err
 	}
@@ -264,7 +264,7 @@ func GetBinaryForVersion(root, vers, out string) error {
 	}
 	fi.Close()
 
-	return unpackArchive(arcpath, out, archive)
+	return unpackArchive(distname, binnom, arcpath, out, archive)
 }
 
 func (i *Install) SelectGoodInstallLoc() error {

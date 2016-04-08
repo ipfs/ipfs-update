@@ -51,7 +51,7 @@ var cmdVersions = cli.Command{
 	Usage:     "print out all available versions",
 	ArgsUsage: " ",
 	Action: func(c *cli.Context) {
-		vs, err := GetVersions(util.IpfsVersionPath)
+		vs, err := GetVersions(util.IpfsVersionPath, "go-ipfs")
 		if err != nil {
 			stump.Fatal("Failed to query versions: ", err)
 		}
@@ -90,7 +90,7 @@ var cmdInstall = cli.Command{
 			stump.Fatal("Please specify a version to install")
 		}
 		if vers == "latest" {
-			latest, err := GetLatestVersion(util.IpfsVersionPath)
+			latest, err := GetLatestVersion(util.IpfsVersionPath, "go-ipfs")
 			if err != nil {
 				stump.Fatal("error resolving 'latest': ", err)
 			}
@@ -192,7 +192,7 @@ var cmdFetch = cli.Command{
 		vers := c.Args().First()
 		if vers == "" || vers == "latest" {
 			stump.VLog("looking up 'latest'")
-			latest, err := GetLatestVersion(util.IpfsVersionPath)
+			latest, err := GetLatestVersion(util.IpfsVersionPath, "go-ipfs")
 			if err != nil {
 				stump.Fatal("error querying latest version: ", err)
 			}
@@ -220,7 +220,7 @@ var cmdFetch = cli.Command{
 			stump.Fatal("stat(%s)", output, err)
 		}
 
-		err = GetBinaryForVersion(util.IpfsVersionPath, vers, output)
+		err = GetBinaryForVersion("go-ipfs", "ipfs", util.IpfsVersionPath, vers, output)
 		if err != nil {
 			stump.Fatal("Failed to fetch binary: ", err)
 		}
