@@ -16,7 +16,7 @@ test_expect_success "'ipfs-update install' works" '
 '
 
 test_expect_success "'ipfs-update install' output looks good" '
-	grep "fetching ipfs version v0.3.9" actual
+	grep "fetching go-ipfs version v0.3.9" actual
 '
 
 test_expect_success "'ipfs-update version' works" '
@@ -34,7 +34,7 @@ test_expect_success "'ipfs-update install' works when something is installed" '
 '
 
 test_expect_success "'ipfs-update install' output looks good" '
-	grep "fetching ipfs version v0.3.8" actual
+	grep "fetching go-ipfs version v0.3.8" actual
 '
 
 test_expect_success "'ipfs-update version' works" '

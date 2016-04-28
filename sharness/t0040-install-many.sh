@@ -12,8 +12,8 @@ test_expect_success "start a docker container" '
 
 test_install_version "v0.3.7"
 test_install_version "v0.3.10"
-test_install_version "v0.4.0-dev"
 test_install_version "v0.3.8"
+test_install_version "v0.4.0"
 
 test_expect_success "'ipfs init' succeeds" '
 	exec_docker "$DOCID" "IPFS_PATH=/root/.ipfs BITS=2048 ipfs init" >actual 2>&1 ||
@@ -27,8 +27,8 @@ test_expect_success ".ipfs/ has been created" '
 
 test_install_version "v0.3.10"
 
-test_expect_success "stop a docker container" '
-	stop_docker "$DOCID"
-'
+#test_expect_success "stop a docker container" '
+#	stop_docker "$DOCID"
+#'
 
 test_done
