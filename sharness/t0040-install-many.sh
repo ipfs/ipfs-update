@@ -27,8 +27,8 @@ test_expect_success ".ipfs/ has been created" '
 
 test_install_version "v0.3.10"
 
-#test_expect_success "stop a docker container" '
-#	stop_docker "$DOCID"
-#'
+test_expect_success "stop a docker container" '
+	stop_docker "$DOCID"
+'
 
 test_done
