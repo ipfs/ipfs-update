@@ -28,7 +28,7 @@ TEST_TRASH_DIR=$(pwd)
 TEST_SCRIPTS_DIR=$(dirname "$TEST_TRASH_DIR")
 APP_ROOT_DIR=$(dirname "$TEST_SCRIPTS_DIR")
 
-CERTIFS='/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt'
+CERTIFS='/etc/ssl/certs:/etc/ssl/certs'
 
 # This writes a docker ID on stdout
 start_docker() {
@@ -63,7 +63,7 @@ test_install_version() {
 	'
 
 	test_expect_success "'ipfs-update install' output looks good" '
-		grep "fetching ipfs version $VERSION" actual &&
+		grep "fetching go-ipfs version $VERSION" actual &&
 		grep "installation complete." actual ||
 		test_fsh cat actual
 	'
