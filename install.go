@@ -291,13 +291,7 @@ func findGoodInstallDir() (string, error) {
 	// The first ones have more priority than the last ones
 	var candidates []string
 
-	// First candidate GOBIN
-	gobin := os.Getenv("GOBIN")
-	if gobin != "" {
-		candidates = append(candidates, gobin)
-	}
-
-	// Second candidates, GOPATH(s)/bin
+	// GOPATH(s)/bin
 	gopath := os.Getenv("GOPATH")
 	if gopath != "" {
 		gopaths := strings.Split(gopath, ":")
