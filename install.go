@@ -287,28 +287,36 @@ func (i *Install) SelectGoodInstallLoc() error {
 var errNoGoodInstall = fmt.Errorf("could not find good install location")
 
 func findGoodInstallDir() (string, error) {
-	// gopath setup?
+	// Gather some candidate locations
+	// The first ones have more priority than the last ones
+	var candidates []string
+
+	// GOPATH(s)/bin
 	gopath := os.Getenv("GOPATH")
 	if gopath != "" {
-		return filepath.Join(gopath, "bin"), nil
+		gopaths := strings.Split(gopath, ":")
+		for i, _ := range gopaths {
+			gopaths[i] = filepath.Join(gopaths[i], "bin")
+		}
+		candidates = append(candidates, gopaths...)
 	}
 
-	common := []string{"/usr/local/bin"}
-	for _, dir := range common {
+	candidates = append(candidates, "/usr/local/bin")
+
+	// Let's try user's $HOME/bin too
+	// but not root because no one installs to /root/bin
+	if home := os.Getenv("HOME"); home != "" && os.Getenv("USER") != "root" {
+		homebin := filepath.Join(home, "bin")
+		candidates = append(candidates, homebin)
+	}
+
+	// Finally /usr/bin
+	candidates = append(candidates, "/usr/bin")
+	// Test if it makes sense to install to any of those
+	for _, dir := range candidates {
 		if canWrite(dir) && isInPath(dir) {
 			return dir, nil
 		}
-	}
-
-	// hrm, none of those worked. lets check home.
-	home := os.Getenv("HOME")
-	if home == "" {
-		return "", errNoGoodInstall
-	}
-
-	homebin := filepath.Join(home, "bin")
-	if canWrite(homebin) {
-		return homebin, nil
 	}
 
 	return "", errNoGoodInstall
