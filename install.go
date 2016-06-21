@@ -70,6 +70,10 @@ func (i *Install) Run() error {
 
 	if i.CurrentVers == "none" {
 		stump.VLog("no pre-existing ipfs installation found")
+	} else if i.CurrentVers == i.TargetVers {
+		stump.VLog("Target and Current version are the same")
+		i.Succeeded = true
+		return nil
 	}
 
 	err = i.DownloadNewBinary()
