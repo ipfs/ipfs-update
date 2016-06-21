@@ -19,13 +19,13 @@ func init() {
 
 func main() {
 	app := cli.NewApp()
-	app.Usage = "update ipfs"
+	app.Usage = "Update ipfs."
 	app.Version = config.CurrentVersionNumber
 
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "verbose",
-			Usage: "print verbose output",
+			Usage: "Print verbose output.",
 		},
 	}
 
@@ -48,12 +48,12 @@ func main() {
 
 var cmdVersions = cli.Command{
 	Name:      "versions",
-	Usage:     "print out all available versions",
+	Usage:     "Print out all available versions.",
 	ArgsUsage: " ",
 	Action: func(c *cli.Context) {
 		vs, err := GetVersions(util.IpfsVersionPath, "go-ipfs")
 		if err != nil {
-			stump.Fatal("Failed to query versions: ", err)
+			stump.Fatal("failed to query versions: ", err)
 		}
 
 		for _, v := range vs {
@@ -64,11 +64,11 @@ var cmdVersions = cli.Command{
 
 var cmdVersion = cli.Command{
 	Name:  "version",
-	Usage: "print out currently installed version",
+	Usage: "Print out currently installed version.",
 	Action: func(c *cli.Context) {
 		v, err := GetCurrentVersion()
 		if err != nil {
-			stump.Fatal("Failed to check local version: ", err)
+			stump.Fatal("failed to check local version: ", err)
 		}
 
 		fmt.Println(v)
@@ -77,17 +77,17 @@ var cmdVersion = cli.Command{
 
 var cmdInstall = cli.Command{
 	Name:  "install",
-	Usage: "install a version of ipfs",
+	Usage: "Install a version of ipfs.",
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "no-check",
-			Usage: "skip running of pre-install tests",
+			Usage: "Skip pre-install tests.",
 		},
 	},
 	Action: func(c *cli.Context) {
 		vers := c.Args().First()
 		if vers == "" {
-			stump.Fatal("Please specify a version to install")
+			stump.Fatal("please specify a version to install")
 		}
 		if vers == "latest" {
 			latest, err := GetLatestVersion(util.IpfsVersionPath, "go-ipfs")
@@ -97,7 +97,7 @@ var cmdInstall = cli.Command{
 			vers = latest
 		}
 		if !strings.HasPrefix(vers, "v") {
-			stump.VLog("version strings must start with 'v', autocorrecting...")
+			stump.VLog("Version strings must start with 'v'. Autocorrecting...")
 			vers = "v" + vers
 		}
 
@@ -110,10 +110,10 @@ var cmdInstall = cli.Command{
 		if err != nil {
 			stump.Fatal(err)
 		}
-		stump.Log("\ninstallation complete.")
+		stump.Log("\nInstallation complete!")
 
 		if util.HasDaemonRunning() {
-			stump.Log("remember to restart your daemon before continuing")
+			stump.Log("Remember to restart your daemon before continuing.")
 		}
 	},
 }
@@ -121,13 +121,13 @@ var cmdInstall = cli.Command{
 var cmdStash = cli.Command{
 	Name:  "stash",
 	Usage: "stashes copy of currently installed ipfs binary",
-	Description: `stash is an advanced command that saves the currently installed
+	Description: `'stash' is an advanced command that saves the currently installed
    version of ipfs to a backup location. This is useful when you want to experiment
-   with different versions but still be able to go back to the version you started from.`,
+   with different versions, but still be able to go back to the version you started with.`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "tag",
-			Usage: "optionally specify tag for stashed binary",
+			Usage: "Optionally specify tag for stashed binary.",
 		},
 	},
 	Action: func(c *cli.Context) {
@@ -149,11 +149,11 @@ var cmdStash = cli.Command{
 
 var cmdRevert = cli.Command{
 	Name:      "revert",
-	Usage:     "revert to previously installed version of ipfs",
+	Usage:     "Revert to previously installed version of ipfs.",
 	ArgsUsage: " ",
-	Description: `revert will check if a previous update left a stashed
+	Description: `'revert' will check if a previous update left a stashed
    binary and overwrite the current ipfs binary with it.
-   if multiple previous versions exist, you will be prompted to select the
+   If multiple previous versions exist, you will be prompted to select the
    desired binary.`,
 	Action: func(c *cli.Context) {
 		oldbinpath, err := selectRevertBin()
@@ -161,10 +161,10 @@ var cmdRevert = cli.Command{
 			stump.Fatal(err)
 		}
 
-		stump.Log("reverting to %s", oldbinpath)
+		stump.Log("Reverting to %s.", oldbinpath)
 		oldpath, err := ioutil.ReadFile(filepath.Join(util.IpfsDir(), "old-bin", "path-old"))
 		if err != nil {
-			stump.Fatal("Path for previous installation could not be read: ", err)
+			stump.Fatal("path for previous installation could not be read: ", err)
 		}
 
 		binpath := string(oldpath)
@@ -174,18 +174,18 @@ var cmdRevert = cli.Command{
 			stump.Error("to path: %s", binpath)
 			stump.Fatal(err)
 		}
-		stump.Log("\nrevert complete.")
+		stump.Log("\nRevert complete.")
 	},
 }
 
 var cmdFetch = cli.Command{
 	Name:      "fetch",
-	Usage:     "fetch a given (default: latest) version of ipfs",
+	Usage:     "Fetch a given version of ipfs. Default: latest.",
 	ArgsUsage: "<version>",
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "output",
-			Usage: "specify where to save the downloaded binary",
+			Usage: "Specify where to save the downloaded binary.",
 		},
 	},
 	Action: func(c *cli.Context) {
@@ -201,7 +201,7 @@ var cmdFetch = cli.Command{
 		}
 
 		if !strings.HasPrefix(vers, "v") {
-			stump.VLog("version strings must start with 'v', autocorrecting...")
+			stump.VLog("Version strings must start with 'v'. Autocorrecting...")
 			vers = "v" + vers
 		}
 
@@ -222,7 +222,7 @@ var cmdFetch = cli.Command{
 
 		err = GetBinaryForVersion("go-ipfs", "ipfs", util.IpfsVersionPath, vers, output)
 		if err != nil {
-			stump.Fatal("Failed to fetch binary: ", err)
+			stump.Fatal("failed to fetch binary: ", err)
 		}
 
 		err = os.Chmod(output, 0755)
