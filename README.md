@@ -1,30 +1,25 @@
-# ipfs update
+# ipfs-update
+
 > An updater tool for ipfs. Can fetch and install given versions of go-ipfs.
 
 [![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://ipn.io)
 [![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.io/)
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
+[![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-![](https://cdn.rawgit.com/jbenet/contribute-ipfs-gif/master/img/contribute.gif)
+## Install
 
-## Installation
-
-Requirement: Go version 1.5 or higher
+Requirement: Go version 1.5 or higher.
 
 ```sh
 go get -u github.com/ipfs/ipfs-update
 ```
 
-## Note
-If you do not see the expected version listed by `ipfs-update versions`. Try updating
-`ipfs-update` (either by the above `go get` command or through gobuilder).
-
-## Contribute
-
-Pull requests and issues are welcome! Please open them in this repository.
-For more on contributing to IPFS projects, see the [contribution guidelines](https://github.com/ipfs/community/blob/master/contributing.md).
 
 ## Usage
+
+If you do not see the expected version listed by `ipfs-update versions`. Try updating
+`ipfs-update` (either by the above `go get` command or through gobuilder).
 
 #### version
 
@@ -60,3 +55,16 @@ back to your older stable installation.
 Downloads the specified version of ipfs into your current
 directory. This is a plumbing command that can be utilized in scripts or by
 more advanced users.
+
+## Contribute
+
+Feel free to join in. All welcome. Open an [issue](https://github.com/ipfs/ipfs-update/issues)!
+
+This repository falls under the IPFS [Code of Conduct](https://github.com/ipfs/community/blob/master/code-of-conduct.md).
+
+[![](https://cdn.rawgit.com/jbenet/contribute-ipfs-gif/master/img/contribute.gif)](https://github.com/ipfs/community/blob/master/contributing.md)
+
+## License
+
+[MIT](LICENSE)
+
