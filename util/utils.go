@@ -22,6 +22,12 @@ var (
 	IpfsVersionPath  = "/ipns/dist.ipfs.io"
 )
 
+func init() {
+	if dist := os.Getenv("IPFS_DIST_PATH"); dist != "" {
+		IpfsVersionPath = dist
+	}
+}
+
 const fetchSizeLimit = 1024 * 1024 * 512
 
 func ApiEndpoint(ipfspath string) (string, error) {
