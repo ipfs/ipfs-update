@@ -139,7 +139,7 @@ func (i *Install) MaybeStash() error {
 		if err != nil {
 			if strings.Contains(err.Error(), "could not find old") {
 				stump.Log("stash failed, no binary found.")
-				stump.Log("this could be because you have a daemon running, but no ipfs binary in your path.")
+				stump.Log(util.BoldText("this could be because you have a daemon running, but no ipfs binary in your path."))
 				stump.Log("continuing anyways, but skipping stash")
 				return nil
 			}

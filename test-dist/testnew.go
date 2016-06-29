@@ -20,6 +20,7 @@ import (
 func runCmd(p, bin string, args ...string) (string, error) {
 	cmd := exec.Command(bin, args...)
 	cmd.Env = []string{"IPFS_PATH=" + p}
+	stump.VLog("  - running: %s", cmd.Args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("%s: %s", err, string(out))
@@ -247,12 +248,12 @@ func TestBinary(bin, version string) error {
 	// test some basic things against the daemon
 	err = testFileAdd(tdir, bin)
 	if err != nil {
-		return err
+		return fmt.Errorf("test file add: %s", err)
 	}
 
 	err = testRefsList(tdir, bin)
 	if err != nil {
-		return err
+		return fmt.Errorf("test refs list: %s", err)
 	}
 
 	return nil
@@ -262,7 +263,7 @@ func testFileAdd(tdir, bin string) error {
 	stump.VLog("  - checking that we can add and cat a file")
 	text := "hello world! This node should work"
 	data := bytes.NewBufferString(text)
-	c := exec.Command(bin, "add", "-q")
+	c := exec.Command(bin, "add", "-q", "--progress=false")
 	c.Env = []string{"IPFS_PATH=" + tdir}
 	c.Stdin = data
 	out, err := c.CombinedOutput()
@@ -272,7 +273,7 @@ func testFileAdd(tdir, bin string) error {
 		return err
 	}
 
-	hash := strings.Trim(string(out), "\n \t")
+	hash := strings.Trim(string(out), "\n \t\r")
 	fiout, err := runCmd(tdir, bin, "cat", hash)
 	if err != nil {
 		return err

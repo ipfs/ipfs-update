@@ -157,7 +157,7 @@ func verifyMigrationSupportsVersion(fsrbin, v string) error {
 		return nil
 	}
 
-	stump.VLog("  - migrations doesnt support version %s, attempting to update")
+	stump.VLog("  - migrations doesnt support version %s, attempting to update", v)
 	_, err = GetMigrations()
 	if err != nil {
 		return err

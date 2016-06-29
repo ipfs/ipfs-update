@@ -192,3 +192,7 @@ func BeforeVersion(check, cur string) bool {
 	}
 	return false
 }
+
+func BoldText(s string) string {
+	return fmt.Sprintf("\033[1m%s\033[0m")
+}
