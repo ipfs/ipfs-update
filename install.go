@@ -71,7 +71,7 @@ func (i *Install) Run() error {
 	if i.CurrentVers == "none" {
 		stump.VLog("no pre-existing ipfs installation found")
 	} else if i.CurrentVers == i.TargetVers {
-		stump.VLog("Target and Current version are the same")
+		stump.Log("Already have version %s installed, skipping.", i.TargetVers)
 		i.Succeeded = true
 		return nil
 	}
@@ -224,7 +224,7 @@ func (i *Install) DownloadNewBinary() error {
 
 	err = GetBinaryForVersion("go-ipfs", "ipfs", i.UrlRoot, i.TargetVers, out)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get ipfs binary: %s", err)
 	}
 
 	i.TmpBinPath = out

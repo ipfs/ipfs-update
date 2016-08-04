@@ -47,11 +47,11 @@ func CheckMigration() error {
 	stump.VLog("  - repo version of new binary is ", nbinver)
 
 	if oldver != nbinver {
-		stump.Log("  - Migration required")
+		stump.Log("  check complete, migration required.")
 		return RunMigration(oldver, nbinver)
 	}
 
-	stump.VLog("  - no migration required")
+	stump.VLog("  check complete, no migration required.")
 
 	return nil
 }
