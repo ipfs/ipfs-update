@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	cli "github.com/codegangsta/cli"
@@ -27,10 +28,17 @@ func main() {
 			Name:  "verbose",
 			Usage: "Print verbose output.",
 		},
+		cli.StringFlag{
+			Name:  "distpath",
+			Usage: "specify the distributions build to use",
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
 		stump.Verbose = c.Bool("verbose")
+		if distp := c.String("distpath"); distp != "" {
+			util.IpfsVersionPath = distp
+		}
 		return nil
 	}
 
@@ -101,7 +109,8 @@ var cmdInstall = cli.Command{
 			}
 			vers = latest
 		}
-		if !strings.HasPrefix(vers, "v") {
+
+		if !strings.HasPrefix(vers, "v") && looksLikeSemver(vers) {
 			stump.VLog("Version strings must start with 'v'. Autocorrecting...")
 			vers = "v" + vers
 		}
@@ -210,7 +219,7 @@ var cmdFetch = cli.Command{
 			vers = latest
 		}
 
-		if !strings.HasPrefix(vers, "v") {
+		if !strings.HasPrefix(vers, "v") && looksLikeSemver(vers) {
 			stump.VLog("Version strings must start with 'v'. Autocorrecting...")
 			vers = "v" + vers
 		}
@@ -241,4 +250,17 @@ var cmdFetch = cli.Command{
 		}
 		return nil
 	},
+}
+
+func looksLikeSemver(v string) bool {
+	parts := strings.Split(v, ".")
+	if len(parts) < 3 {
+		return false
+	}
+
+	if _, err := strconv.Atoi(parts[0]); err == nil {
+		return true
+	}
+
+	return false
 }
