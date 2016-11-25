@@ -215,7 +215,8 @@ func TestBinary(bin, version string) error {
 		return err
 	}
 
-	if rversion != "ipfs version "+version[1:] {
+	parts := strings.Fields(rversion)
+	if !versionMatch(parts[len(parts)-1], version[1:]) {
 		return fmt.Errorf("version didnt match")
 	}
 
@@ -257,6 +258,16 @@ func TestBinary(bin, version string) error {
 	}
 
 	return nil
+}
+
+func versionMatch(a, b string) bool {
+	if strings.HasSuffix(b, "-dev") && strings.Contains(a, "-pre") {
+		af := strings.Split(a, "-")[0]
+		bf := strings.Split(b, "-")[0]
+		return af == bf
+	}
+
+	return a != b
 }
 
 func testFileAdd(tdir, bin string) error {
