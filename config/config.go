@@ -4,7 +4,7 @@ package config
 const CurrentAppName = "ipfs-update"
 
 // CurrentVersionNumber is the current application's version literal
-const CurrentVersionNumber = "0.1.0"
+const CurrentVersionNumber = "0.1.5"
 
 // CurrentCommit is the current git commit, if it is available.
 // It might not be currently available, but it might be later if we
@@ -20,4 +20,3 @@ func GetUserAgent() string {
 
 	return ua
 }
-
