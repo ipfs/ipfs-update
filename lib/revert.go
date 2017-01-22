@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"bufio"
@@ -26,7 +26,7 @@ func revertOldBinary(oldpath, version string) {
 	}
 }
 
-func selectRevertBin() (string, error) {
+func SelectRevertBin() (string, error) {
 	oldbinpath := filepath.Join(util.IpfsDir(), "old-bin")
 	_, err := os.Stat(oldbinpath)
 	if os.IsNotExist(err) {
