@@ -267,7 +267,7 @@ func versionMatch(a, b string) bool {
 		return af == bf
 	}
 
-	return a != b
+	return a == b
 }
 
 func testFileAdd(tdir, bin string) error {
