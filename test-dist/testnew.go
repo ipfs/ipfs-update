@@ -246,7 +246,6 @@ func TestBinary(bin, version string) error {
 		if err != nil {
 			stump.VLog("  - error killing test daemon: %s (continuing anyway)", err)
 		}
-		stump.Log("success!")
 	}()
 
 	// test some basic things against the daemon
@@ -259,6 +258,7 @@ func TestBinary(bin, version string) error {
 	if err != nil {
 		return fmt.Errorf("test refs list: %s", err)
 	}
+	stump.Log("success! tests all passed.")
 
 	return nil
 }
