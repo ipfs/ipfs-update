@@ -156,10 +156,13 @@ func waitForApi(ipfspath string) error {
 	}
 
 	for i := 0; i < 10; i++ {
-		_, err := net.Dial("tcp", endpoint)
+		c, err := net.Dial("tcp", endpoint)
 		if err == nil {
+			c.Close()
+			stump.VLog("  - Successfully made connection to api endpoint")
 			return nil
 		}
+		stump.VLog("  - connecting to api endpoint failed: %s", err)
 
 		time.Sleep(time.Millisecond * (100 * time.Duration(i+1)))
 	}
