@@ -71,7 +71,7 @@ func RunMigration(oldv, newv string) error {
 	}
 
 	// check to make sure migrations binary supports our target version
-	err = verifyMigrationSupportsVersion(migrateBin, newv)
+	migrateBin, err = verifyMigrationSupportsVersion(migrateBin, newv)
 	if err != nil {
 		return err
 	}
@@ -141,40 +141,40 @@ func getMigrationsGoGet() (string, error) {
 	return filepath.Join(os.Getenv("GOPATH"), "bin", migrations), nil
 }
 
-func verifyMigrationSupportsVersion(fsrbin, v string) error {
+func verifyMigrationSupportsVersion(fsrbin, v string) (string, error) {
 	stump.VLog("  - verifying migration supports version %s", v)
 	vn, err := strconv.Atoi(v)
 	if err != nil {
-		return fmt.Errorf("given migration version was not a number: %q", v)
+		return fsrbin, fmt.Errorf("given migration version was not a number: %q", v)
 	}
 
 	sn, err := migrationsVersion(fsrbin)
 	if err != nil {
-		return err
+		return fsrbin, err
 	}
 
 	if sn >= vn {
-		return nil
+		return fsrbin, nil
 	}
 
 	stump.VLog("  - migrations doesnt support version %s, attempting to update", v)
-	_, err = GetMigrations()
+	fsrbin, err = GetMigrations()
 	if err != nil {
-		return err
+		return fsrbin, err
 	}
 
 	stump.VLog("  - migrations updated")
 
 	sn, err = migrationsVersion(fsrbin)
 	if err != nil {
-		return err
+		return fsrbin, err
 	}
 
 	if sn >= vn {
-		return nil
+		return fsrbin, nil
 	}
 
-	return fmt.Errorf("no known migration supports version %s", v)
+	return fsrbin, fmt.Errorf("no known migration supports version %s", v)
 }
 
 func migrationsVersion(bin string) (int, error) {

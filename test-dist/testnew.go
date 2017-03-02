@@ -26,10 +26,7 @@ func runCmd(p, bin string, args ...string) (string, error) {
 		return "", fmt.Errorf("%s: %s", err, string(out))
 	}
 
-	if out[len(out)-1] == '\n' {
-		return string(out[:len(out)-1]), nil
-	}
-	return string(out), nil
+	return strings.TrimSpace(string(out)), nil
 }
 
 type daemon struct {
@@ -220,7 +217,7 @@ func TestBinary(bin, version string) error {
 
 	parts := strings.Fields(rversion)
 	if !versionMatch(parts[len(parts)-1], version[1:]) {
-		return fmt.Errorf("version didnt match")
+		return fmt.Errorf("version didnt match (expected '%s', got '%s')", version[1:], parts[len(parts)-1])
 	}
 
 	if util.BeforeVersion("v0.3.8", version) {
