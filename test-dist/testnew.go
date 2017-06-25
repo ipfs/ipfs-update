@@ -77,6 +77,13 @@ func tweakConfig(ipfspath string) error {
 	addrs["Gateway"] = ""
 	addrs["Swarm"] = []string{"/ip4/0.0.0.0/tcp/0"}
 
+	_, ok = cfg["Bootstrap"].([]interface{})
+	if !ok {
+		fmt.Println(cfg["Bootstrap"])
+		return fmt.Errorf("no bootstrap field in config")
+	}
+	cfg["Bootstrap"] = []interface{}{}
+
 	out, err := json.Marshal(cfg)
 	if err != nil {
 		return err
@@ -91,7 +98,7 @@ func tweakConfig(ipfspath string) error {
 }
 
 func StartDaemon(p, bin string) (io.Closer, error) {
-	cmd := exec.Command(bin, "daemon")
+	cmd := exec.Command(bin, "daemon", "--debug")
 
 	stdout, err := os.Create(filepath.Join(p, "daemon.stdout"))
 	if err != nil {
@@ -135,7 +142,7 @@ func waitForApi(ipfspath string) error {
 	for i := 0; i < nloops; i++ {
 		ep, err := util.ApiEndpoint(ipfspath)
 		if err == nil {
-			stump.VLog("  - found api file")
+			stump.VLog("  - found api file: %s", ep)
 			endpoint = ep
 			success = true
 			break
