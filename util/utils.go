@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	api "github.com/ipfs/go-ipfs-api"
 	config "github.com/ipfs/ipfs-update/config"
@@ -154,6 +155,7 @@ func IpfsDir() string {
 
 func HasDaemonRunning() bool {
 	shell := api.NewShell(LocalApiUrl)
+	shell.SetTimeout(1 * time.Second)
 	return shell.IsUp()
 }
 
