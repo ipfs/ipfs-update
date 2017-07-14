@@ -57,7 +57,7 @@ func CheckMigration() error {
 }
 
 func RunMigration(oldv, newv string) error {
-	migrateBin := "fs-repo-migrations"
+	migrateBin := util.OsExeFileName("fs-repo-migrations")
 	stump.VLog("  - checking for migrations binary...")
 	_, err := exec.LookPath(migrateBin)
 	if err != nil {
@@ -103,7 +103,7 @@ func GetMigrations() (string, error) {
 		return "", fmt.Errorf("tempdir: %s", err)
 	}
 
-	out := filepath.Join(dir, migrations)
+	out := filepath.Join(dir, util.OsExeFileName(migrations))
 
 	err = GetBinaryForVersion(migrations, migrations, util.IpfsVersionPath, latest, out)
 	if err != nil {
@@ -132,7 +132,7 @@ func getMigrationsGoGet() (string, error) {
 	stump.VLog("  - success. verifying...")
 
 	// verify we can see the binary now
-	p, err := exec.LookPath("fs-repo-migrations")
+	p, err := exec.LookPath(util.OsExeFileName("fs-repo-migrations"))
 	if err != nil {
 		return "", fmt.Errorf("install succeeded, but failed to find binary afterwards. (%s)", err)
 	}

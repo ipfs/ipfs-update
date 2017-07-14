@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -144,6 +145,9 @@ func Move(src, dest string) error {
 
 func IpfsDir() string {
 	def := filepath.Join(os.Getenv("HOME"), ".ipfs")
+	if runtime.GOOS == "windows" {
+		def = filepath.Join(os.Getenv("USERPROFILE"), ".ipfs")
+	}
 
 	ipfs_path := os.Getenv("IPFS_PATH")
 	if ipfs_path != "" {
@@ -161,7 +165,8 @@ func HasDaemonRunning() bool {
 
 func RunCmd(p, bin string, args ...string) (string, error) {
 	cmd := exec.Command(bin, args...)
-	cmd.Env = append(os.Environ(), "IPFS_PATH="+p)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "IPFS_PATH="+p)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("%s: %s", err, string(out))
@@ -197,4 +202,11 @@ func BeforeVersion(check, cur string) bool {
 
 func BoldText(s string) string {
 	return fmt.Sprintf("\033[1m%s\033[0m")
+}
+
+func OsExeFileName(s string) string {
+	if runtime.GOOS == "windows" {
+		return s + ".exe"
+	}
+	return s
 }
