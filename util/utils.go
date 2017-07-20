@@ -166,7 +166,9 @@ func HasDaemonRunning() bool {
 func RunCmd(p, bin string, args ...string) (string, error) {
 	cmd := exec.Command(bin, args...)
 	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, "IPFS_PATH="+p)
+	if !ArrayContainsEnvVar(cmd.Env, "IPFS_PATH") {
+		cmd.Env = append(cmd.Env, "IPFS_PATH="+p)
+	}
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("%s: %s", err, string(out))
@@ -209,4 +211,26 @@ func OsExeFileName(s string) string {
 		return s + ".exe"
 	}
 	return s
+}
+
+func ArrayContainsEnvVar(arr []string, ev string) bool {
+	// Function required until Go 1.9
+	ev = strings.ToLower(ev) + "="
+	for i := range arr {
+		if strings.Index(strings.ToLower(arr[i]), ev) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func ReplaceEnvVarIfExists(arr []string, ev string, val string) []string {
+	ev_lower := strings.ToLower(ev)
+	for i := len(arr) - 1; i >= 0; i-- {
+		if strings.Index(strings.ToLower(arr[i]), ev_lower) == 0 {
+			arr = append(arr[:i], arr[i+1:]...)
+		}
+	}
+	arr = append(arr, ev+"="+val)
+	return arr
 }

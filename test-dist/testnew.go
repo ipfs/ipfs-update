@@ -22,7 +22,7 @@ func runCmd(p, bin string, args ...string) (string, error) {
 	if runtime.GOOS == "windows" {
 		cmd.Env = os.Environ()
 	}
-	cmd.Env = append(cmd.Env, "IPFS_PATH="+p)
+	cmd.Env = util.ReplaceEnvVarIfExists(cmd.Env, "IPFS_PATH", p)
 	stump.VLog("  - running: %s", cmd.Args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -116,7 +116,7 @@ func StartDaemon(p, bin string) (io.Closer, error) {
 	if runtime.GOOS == "windows" {
 		cmd.Env = os.Environ()
 	}
-	cmd.Env = append(cmd.Env, "IPFS_PATH="+p)
+	cmd.Env = util.ReplaceEnvVarIfExists(cmd.Env, "IPFS_PATH", p)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
@@ -296,8 +296,7 @@ func testFileAdd(tdir, bin string) error {
 	if runtime.GOOS == "windows" {
 		c.Env = os.Environ()
 	}
-	c.Env = append(c.Env, "IPFS_PATH="+tdir)
-
+	c.Env = util.ReplaceEnvVarIfExists(c.Env, "IPFS_PATH", tdir)
 	out, err := c.CombinedOutput()
 	if err != nil {
 		stump.Error("testfileadd fail: %s", err)
@@ -324,7 +323,7 @@ func testRefsList(tdir, bin string) error {
 	if runtime.GOOS == "windows" {
 		c.Env = os.Environ()
 	}
-	c.Env = append(c.Env, "IPFS_PATH="+tdir)
+	c.Env = util.ReplaceEnvVarIfExists(c.Env, "IPFS_PATH", tdir)
 	out, err := c.CombinedOutput()
 	if err != nil {
 		stump.Error("testfileadd fail: %s", err)
