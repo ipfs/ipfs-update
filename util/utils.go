@@ -225,9 +225,9 @@ func ArrayContainsEnvVar(arr []string, ev string) bool {
 }
 
 func ReplaceEnvVarIfExists(arr []string, ev string, val string) []string {
-	ev_lower := strings.ToLower(ev)
+	evLower := strings.ToLower(ev) + "="
 	for i := len(arr) - 1; i >= 0; i-- {
-		if strings.Index(strings.ToLower(arr[i]), ev_lower) == 0 {
+		if strings.Index(strings.ToLower(arr[i]), evLower) == 0 {
 			arr = append(arr[:i], arr[i+1:]...)
 		}
 	}
