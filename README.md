@@ -15,10 +15,7 @@ Requirement: Go version 1.8 or higher.
 ```sh
 go get -u github.com/ipfs/ipfs-update
 ```
-If your $GOPATH/bin isn't within $PATH, you'll need to get ipfs-update into $PATH, for example:
-```sh
-ln -s $GOPATH/bin/ipfs-update ~/.local/bin/ipfs-update
-```
+Note that your $GOPATH/bin should be within $PATH for the result ipfs-update binary to be found.
 
 ## Usage
 
