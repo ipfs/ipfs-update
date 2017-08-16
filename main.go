@@ -91,8 +91,9 @@ var cmdVersion = cli.Command{
 }
 
 var cmdInstall = cli.Command{
-	Name:  "install",
-	Usage: "Install a version of ipfs.",
+	Name:      "install",
+	Usage:     "Install a version of ipfs.",
+	ArgsUsage: "A version or \"latest\" for latest version",
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "no-check",
