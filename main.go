@@ -12,7 +12,7 @@ import (
 	lib "github.com/ipfs/ipfs-update/lib"
 	util "github.com/ipfs/ipfs-update/util"
 
-	cli "github.com/codegangsta/cli"
+	cli "github.com/urfave/cli"
 	stump "github.com/whyrusleeping/stump"
 )
 
