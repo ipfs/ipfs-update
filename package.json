@@ -1,9 +1,33 @@
 {
-  "name": "ipfs-update",
   "author": "whyrusleeping",
-  "version": "1.0.0",
-  "language": "go",
+  "bugs": {},
   "go": {
     "dvcsimport": "github.com/ipfs/ipfs-update"
-  }
+  },
+  "gxDependencies": [
+    {
+      "author": "whyrusleeping",
+      "hash": "QmZLUtHGe9HDQrreAYkXCzzK6mHVByV4MRd8heXAtV5wyS",
+      "name": "stump",
+      "version": "0.0.0"
+    },
+    {
+      "author": "ipfs",
+      "hash": "QmXaUoY2EpTxki3kgPZonFNw4syYP34sCczFiAhdsX7bky",
+      "name": "go-ipfs-api",
+      "version": "1.1.1"
+    },
+    {
+      "author": "urfave",
+      "hash": "Qmc1AtgBdoUHP8oYSqU81NRYdzohmF45t5XNwVMvhCxsBA",
+      "name": "cli",
+      "version": "1.19.1"
+    }
+  ],
+  "gxVersion": "0.11.0",
+  "language": "go",
+  "license": "",
+  "name": "ipfs-update",
+  "version": "1.0.0"
 }
+
