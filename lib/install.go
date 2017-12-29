@@ -294,12 +294,19 @@ func findGoodInstallDir() (string, error) {
 	// Gather some candidate locations
 	// The first ones have more priority than the last ones
 	var candidates []string
+	home := os.Getenv("HOME")
 
 	// GOPATH(s)/bin
 	gopath := os.Getenv("GOPATH")
+
+	// if GOPATH is not set, use the default path $USER/go
+	if gopath == "" && home != "" {
+		gopath = filepath.Join(home, "go")
+	}
+
 	if gopath != "" {
-		gopaths := strings.Split(gopath, ":")
-		for i, _ := range gopaths {
+		gopaths := strings.Split(gopath, string(filepath.ListSeparator))
+		for i := range gopaths {
 			gopaths[i] = filepath.Join(gopaths[i], "bin")
 		}
 		candidates = append(candidates, gopaths...)
@@ -309,7 +316,7 @@ func findGoodInstallDir() (string, error) {
 
 	// Let's try user's $HOME/bin too
 	// but not root because no one installs to /root/bin
-	if home := os.Getenv("HOME"); home != "" && os.Getenv("USER") != "root" {
+	if home != "" && os.Getenv("USER") != "root" {
 		homebin := filepath.Join(home, "bin")
 		candidates = append(candidates, homebin)
 	}
