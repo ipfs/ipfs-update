@@ -227,7 +227,8 @@ var cmdFetch = cli.Command{
 			vers = "v" + vers
 		}
 
-		output := "ipfs-" + vers
+		output := util.OsExeFileName("ipfs-" + vers)
+
 		ofl := c.String("output")
 		if ofl != "" {
 			output = ofl

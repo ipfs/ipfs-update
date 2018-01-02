@@ -26,7 +26,7 @@ func (i *Install) getTmpPath() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(tmpd, "ipfs-new"), nil
+	return filepath.Join(tmpd, util.OsExeFileName("ipfs-new")), nil
 }
 
 func NewInstall(root, target string, nocheck bool) (*Install, error) {
@@ -34,7 +34,7 @@ func NewInstall(root, target string, nocheck bool) (*Install, error) {
 		TargetVers: target,
 		UrlRoot:    root,
 		NoCheck:    nocheck,
-		BinaryName: "ipfs",
+		BinaryName: util.OsExeFileName("ipfs"),
 	}, nil
 }
 
@@ -180,7 +180,7 @@ func InstallBinaryTo(nbin, nloc string) error {
 // StashOldBinary moves the existing ipfs binary to a backup directory
 // and returns the path to the original location of the old binary
 func StashOldBinary(tag string, keep bool) (string, error) {
-	loc, err := exec.LookPath("ipfs")
+	loc, err := exec.LookPath(util.OsExeFileName("ipfs"))
 	if err != nil {
 		return "", fmt.Errorf("could not find old binary: %s", err)
 	}
@@ -314,6 +314,26 @@ func findGoodInstallDir() (string, error) {
 		candidates = append(candidates, homebin)
 	}
 
+	if runtime.GOOS == "windows" {
+		// Profile specific, Go devs would normally have this set
+		if profile := os.Getenv("USERPROFILE"); profile != "" {
+			profilebin := filepath.Join(profile, "go/bin")
+			candidates = append(candidates, profilebin)
+		}
+
+		// If Go is installed, this should be in PATH
+		if goroot := os.Getenv("GOROOT"); goroot != "" {
+			gorootbin := filepath.Join(goroot, "bin")
+			candidates = append(candidates, gorootbin)
+		}
+		
+		// Directory of last resort on Windows, guaranteed to work unless the system is borked
+		if systemroot := os.Getenv("SYSTEMROOT"); systemroot != "" {
+			systemrootbin := filepath.Join(systemroot, "system32")
+			candidates = append(candidates, systemrootbin)
+		}
+	}
+	
 	// Finally /usr/bin
 	candidates = append(candidates, "/usr/bin")
 	// Test if it makes sense to install to any of those
@@ -341,6 +361,7 @@ func canWrite(dir string) bool {
 		return false
 	}
 
+	fi.Close()
 	_ = os.Remove(fi.Name())
 	return true
 }

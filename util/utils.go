@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -144,6 +145,9 @@ func Move(src, dest string) error {
 
 func IpfsDir() string {
 	def := filepath.Join(os.Getenv("HOME"), ".ipfs")
+	if runtime.GOOS == "windows" {
+		def = filepath.Join(os.Getenv("USERPROFILE"), ".ipfs")
+	}
 
 	ipfs_path := os.Getenv("IPFS_PATH")
 	if ipfs_path != "" {
@@ -161,7 +165,10 @@ func HasDaemonRunning() bool {
 
 func RunCmd(p, bin string, args ...string) (string, error) {
 	cmd := exec.Command(bin, args...)
-	cmd.Env = append(os.Environ(), "IPFS_PATH="+p)
+	cmd.Env = os.Environ()
+	if !ArrayContainsEnvVar(cmd.Env, "IPFS_PATH") {
+		cmd.Env = append(cmd.Env, "IPFS_PATH="+p)
+	}
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("%s: %s", err, string(out))
@@ -197,4 +204,33 @@ func BeforeVersion(check, cur string) bool {
 
 func BoldText(s string) string {
 	return fmt.Sprintf("\033[1m%s\033[0m")
+}
+
+func OsExeFileName(s string) string {
+	if runtime.GOOS == "windows" {
+		return s + ".exe"
+	}
+	return s
+}
+
+func ArrayContainsEnvVar(arr []string, ev string) bool {
+	// Function required until Go 1.9
+	ev = strings.ToLower(ev) + "="
+	for i := range arr {
+		if strings.Index(strings.ToLower(arr[i]), ev) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func ReplaceEnvVarIfExists(arr []string, ev string, val string) []string {
+	evLower := strings.ToLower(ev) + "="
+	for i := len(arr) - 1; i >= 0; i-- {
+		if strings.Index(strings.ToLower(arr[i]), evLower) == 0 {
+			arr = append(arr[:i], arr[i+1:]...)
+		}
+	}
+	arr = append(arr, ev+"="+val)
+	return arr
 }

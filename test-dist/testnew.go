@@ -1,7 +1,6 @@
 package testdist
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -19,7 +19,10 @@ import (
 
 func runCmd(p, bin string, args ...string) (string, error) {
 	cmd := exec.Command(bin, args...)
-	cmd.Env = []string{"IPFS_PATH=" + p}
+	if runtime.GOOS == "windows" {
+		cmd.Env = os.Environ()
+	}
+	cmd.Env = util.ReplaceEnvVarIfExists(cmd.Env, "IPFS_PATH", p)
 	stump.VLog("  - running: %s", cmd.Args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -110,7 +113,10 @@ func StartDaemon(p, bin string) (io.Closer, error) {
 		return nil, err
 	}
 
-	cmd.Env = []string{"IPFS_PATH=" + p}
+	if runtime.GOOS == "windows" {
+		cmd.Env = os.Environ()
+	}
+	cmd.Env = util.ReplaceEnvVarIfExists(cmd.Env, "IPFS_PATH", p)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
@@ -279,11 +285,18 @@ func versionMatch(a, b string) bool {
 
 func testFileAdd(tdir, bin string) error {
 	stump.VLog("  - checking that we can add and cat a file")
-	text := "hello world! This node should work"
-	data := bytes.NewBufferString(text)
-	c := exec.Command(bin, "add", "-q", "--progress=false")
-	c.Env = []string{"IPFS_PATH=" + tdir}
-	c.Stdin = data
+	text := []byte("hello world! This node should work")
+	testFile := filepath.Join(tdir, "/test.txt")
+	err := ioutil.WriteFile(testFile, text, 0644)
+	if err != nil {
+		stump.Error("testfileadd could not create test file: %s", err)
+	}
+
+	c := exec.Command(bin, "add", "-q", "--progress=false", testFile)
+	if runtime.GOOS == "windows" {
+		c.Env = os.Environ()
+	}
+	c.Env = util.ReplaceEnvVarIfExists(c.Env, "IPFS_PATH", tdir)
 	out, err := c.CombinedOutput()
 	if err != nil {
 		stump.Error("testfileadd fail: %s", err)
@@ -297,7 +310,7 @@ func testFileAdd(tdir, bin string) error {
 		return err
 	}
 
-	if fiout != text {
+	if fiout != string(text) {
 		return fmt.Errorf("add/cat check failed")
 	}
 
@@ -307,7 +320,10 @@ func testFileAdd(tdir, bin string) error {
 func testRefsList(tdir, bin string) error {
 	stump.VLog("  - checking that file shows up in ipfs refs local")
 	c := exec.Command(bin, "refs", "local")
-	c.Env = []string{"IPFS_PATH=" + tdir}
+	if runtime.GOOS == "windows" {
+		c.Env = os.Environ()
+	}
+	c.Env = util.ReplaceEnvVarIfExists(c.Env, "IPFS_PATH", tdir)
 	out, err := c.CombinedOutput()
 	if err != nil {
 		stump.Error("testfileadd fail: %s", err)
