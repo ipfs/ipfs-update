@@ -138,7 +138,7 @@ func getMigrationsGoGet() (string, error) {
 	}
 	stump.VLog("  - fs-repo-migrations now installed at %s", p)
 
-	return filepath.Join(os.Getenv("GOPATH"), "bin", migrations), nil
+	return filepath.Join(goPaths()[0], "bin", migrations), nil
 }
 
 func verifyMigrationSupportsVersion(fsrbin, v string) (string, error) {

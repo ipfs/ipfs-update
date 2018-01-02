@@ -294,25 +294,18 @@ func findGoodInstallDir() (string, error) {
 	// Gather some candidate locations
 	// The first ones have more priority than the last ones
 	var candidates []string
-	home := os.Getenv("HOME")
 
 	// GOPATH(s)/bin
-	gopath := os.Getenv("GOPATH")
+	gopaths := goPaths()
 
-	// if GOPATH is not set, use the default path $USER/go
-	if gopath == "" && home != "" {
-		gopath = filepath.Join(home, "go")
+	for i := range gopaths {
+		gopaths[i] = filepath.Join(gopaths[i], "bin")
 	}
-
-	if gopath != "" {
-		gopaths := strings.Split(gopath, string(filepath.ListSeparator))
-		for i := range gopaths {
-			gopaths[i] = filepath.Join(gopaths[i], "bin")
-		}
-		candidates = append(candidates, gopaths...)
-	}
+	candidates = append(candidates, gopaths...)
 
 	candidates = append(candidates, "/usr/local/bin")
+
+	home := os.Getenv("HOME")
 
 	// Let's try user's $HOME/bin too
 	// but not root because no one installs to /root/bin
@@ -371,4 +364,19 @@ func canWrite(dir string) bool {
 	fi.Close()
 	_ = os.Remove(fi.Name())
 	return true
+}
+
+// goPaths returns one or more Go paths.
+// If GOPATH is not set, $USER/go (the default GOPATH) is returned.
+func goPaths() []string {
+	path := os.Getenv("GOPATH")
+	if path == "" {
+		home := os.Getenv("HOME")
+		if home == "" {
+			panic("Cannot find either the GOPATH or HOME environment variables, please set at least one of them.")
+		}
+		// use the default GOPATH: $HOME/go
+		path = filepath.Join(home, "go")
+	}
+	return strings.Split(path, string(filepath.ListSeparator))
 }
