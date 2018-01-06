@@ -132,11 +132,7 @@ func getMigrationsGoGet() (string, error) {
 	stump.VLog("  - success. verifying...")
 
 	// verify we can see the binary now
-<<<<<<< 97767caccc5a1863843340c04c52c18fd39ed596
-	p, err := exec.LookPath(util.OsExeFileName("fs-repo-migrations"))
-=======
-	migrationsPath, err := exec.LookPath(migrations)
->>>>>>> migrations does not need to know gopath.
+	migrationsPath, err := exec.LookPath(util.OsExeFileName(migrations))
 	if err != nil {
 		return "", fmt.Errorf("install succeeded, but failed to find binary afterwards. (%s)", err)
 	}
