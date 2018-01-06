@@ -366,14 +366,14 @@ func canWrite(dir string) bool {
 	return true
 }
 
-// goPaths returns one or more Go paths.
-// If GOPATH is not set, $USER/go (the default GOPATH) is returned.
+// goPaths returns all Go paths (may be none if user does not set either GOPATH or HOME).
+// If GOPATH is not set, $USER/go (the default GOPATH) may be returned if $HOME is set.
 func goPaths() []string {
 	path := os.Getenv("GOPATH")
 	if path == "" {
 		home := os.Getenv("HOME")
 		if home == "" {
-			panic("Cannot find either the GOPATH or HOME environment variables, please set at least one of them.")
+			return make([]string, 0)
 		}
 		// use the default GOPATH: $HOME/go
 		path = filepath.Join(home, "go")
