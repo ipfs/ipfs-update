@@ -124,7 +124,7 @@ func GetMigrations() (string, error) {
 
 func getMigrationsGoGet() (string, error) {
 	stump.VLog("  - fetching migrations using 'go get'")
-	cmd := exec.Command("go", "get", "-u", "github.com/ipfs/fs-repo-migrations")
+	cmd := exec.Command("go", "get", "-u", "github.com/ipfs/"+migrations)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("%s %s", string(out), err)
@@ -132,13 +132,17 @@ func getMigrationsGoGet() (string, error) {
 	stump.VLog("  - success. verifying...")
 
 	// verify we can see the binary now
+<<<<<<< 97767caccc5a1863843340c04c52c18fd39ed596
 	p, err := exec.LookPath(util.OsExeFileName("fs-repo-migrations"))
+=======
+	migrationsPath, err := exec.LookPath(migrations)
+>>>>>>> migrations does not need to know gopath.
 	if err != nil {
 		return "", fmt.Errorf("install succeeded, but failed to find binary afterwards. (%s)", err)
 	}
-	stump.VLog("  - fs-repo-migrations now installed at %s", p)
+	stump.VLog("  - %s now installed at %s", migrations, migrationsPath)
 
-	return filepath.Join(goPaths()[0], "bin", migrations), nil
+	return migrationsPath, nil
 }
 
 func verifyMigrationSupportsVersion(fsrbin, v string) (string, error) {
