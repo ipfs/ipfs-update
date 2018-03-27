@@ -317,7 +317,7 @@ func findGoodInstallDir() (string, error) {
 	if runtime.GOOS == "windows" {
 		// Profile specific, Go devs would normally have this set
 		if profile := os.Getenv("USERPROFILE"); profile != "" {
-			profilebin := filepath.Join(profile, "go/bin")
+			profilebin := filepath.Join(profile, "go", "bin")
 			candidates = append(candidates, profilebin)
 		}
 
