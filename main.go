@@ -32,7 +32,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "distpath",
-			Usage: "specify the distributions build to use",
+			Usage: "Specify the distribution build to use.",
 		},
 	}
 
@@ -60,12 +60,12 @@ func main() {
 
 var cmdVersions = cli.Command{
 	Name:      "versions",
-	Usage:     "Print out all available versions.",
+	Usage:     "Print each available version on a newline.",
 	ArgsUsage: " ",
 	Action: func(c *cli.Context) error {
 		vs, err := lib.GetVersions(util.IpfsVersionPath, "go-ipfs")
 		if err != nil {
-			stump.Fatal("failed to query versions: ", err)
+			stump.Fatal("Failed to query versions: ", err)
 		}
 
 		for _, v := range vs {
@@ -78,11 +78,11 @@ var cmdVersions = cli.Command{
 
 var cmdVersion = cli.Command{
 	Name:  "version",
-	Usage: "Print out currently installed version.",
+	Usage: "Print currently installed version.",
 	Action: func(c *cli.Context) error {
 		v, err := lib.GetCurrentVersion()
 		if err != nil {
-			stump.Fatal("failed to check local version: ", err)
+			stump.Fatal("Failed to check local version: ", err)
 		}
 
 		fmt.Println(v)
@@ -93,7 +93,7 @@ var cmdVersion = cli.Command{
 var cmdInstall = cli.Command{
 	Name:      "install",
 	Usage:     "Install a version of ipfs.",
-	ArgsUsage: "A version or \"latest\" for latest version",
+	ArgsUsage: "A version or 'latest' for latest version",
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "no-check",
@@ -103,12 +103,12 @@ var cmdInstall = cli.Command{
 	Action: func(c *cli.Context) error {
 		vers := c.Args().First()
 		if vers == "" {
-			stump.Fatal("please specify a version to install")
+			stump.Fatal("Please specify a version to install.")
 		}
 		if vers == "latest" {
 			latest, err := lib.GetLatestVersion(util.IpfsVersionPath, "go-ipfs")
 			if err != nil {
-				stump.Fatal("error resolving 'latest': ", err)
+				stump.Fatal("Error resolving 'latest': ", err)
 			}
 			vers = latest
 		}
@@ -139,10 +139,10 @@ var cmdInstall = cli.Command{
 
 var cmdStash = cli.Command{
 	Name:  "stash",
-	Usage: "stashes copy of currently installed ipfs binary",
+	Usage: "Stash the currently installed ipfs binary.",
 	Description: `'stash' is an advanced command that saves the currently installed
    version of ipfs to a backup location. This is useful when you want to experiment
-   with different versions, but still be able to go back to the version you started with.`,
+   with different versions, but still want to be able to use the stashed version.`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "tag",
@@ -174,7 +174,7 @@ var cmdRevert = cli.Command{
 	ArgsUsage: " ",
 	Description: `'revert' will check if a previous update left a stashed
    binary and overwrite the current ipfs binary with it.
-   If multiple previous versions exist, you will be prompted to select the
+   If multiple versions exist, you will be prompted to select the
    desired binary.`,
 	Action: func(c *cli.Context) error {
 		oldbinpath, err := lib.SelectRevertBin()
@@ -185,13 +185,13 @@ var cmdRevert = cli.Command{
 		stump.Log("Reverting to %s.", oldbinpath)
 		oldpath, err := ioutil.ReadFile(filepath.Join(util.IpfsDir(), "old-bin", "path-old"))
 		if err != nil {
-			stump.Fatal("path for previous installation could not be read: ", err)
+			stump.Fatal("Path for stashed installation could not be read: ", err)
 		}
 
 		binpath := string(oldpath)
 		err = lib.InstallBinaryTo(oldbinpath, binpath)
 		if err != nil {
-			stump.Error("failed to move old binary: %s", oldbinpath)
+			stump.Error("Failed to move old binary: %s", oldbinpath)
 			stump.Error("to path: %s", binpath)
 			stump.Fatal(err)
 		}
@@ -202,7 +202,7 @@ var cmdRevert = cli.Command{
 
 var cmdFetch = cli.Command{
 	Name:      "fetch",
-	Usage:     "Fetch a given version of ipfs. Default: latest.",
+	Usage:     "Fetch a given version of ipfs. Defaults to 'latest'.",
 	ArgsUsage: "<version>",
 	Flags: []cli.Flag{
 		cli.StringFlag{
@@ -213,10 +213,10 @@ var cmdFetch = cli.Command{
 	Action: func(c *cli.Context) error {
 		vers := c.Args().First()
 		if vers == "" || vers == "latest" {
-			stump.VLog("looking up 'latest'")
+			stump.VLog("Looking up 'latest'")
 			latest, err := lib.GetLatestVersion(util.IpfsVersionPath, "go-ipfs")
 			if err != nil {
-				stump.Fatal("error querying latest version: ", err)
+				stump.Fatal("Error querying latest version: ", err)
 			}
 
 			vers = latest
@@ -236,7 +236,7 @@ var cmdFetch = cli.Command{
 
 		_, err := os.Stat(output)
 		if err == nil {
-			stump.Fatal("file named %q already exists", output)
+			stump.Fatal("File named %q already exists", output)
 		}
 
 		if !os.IsNotExist(err) {
@@ -245,12 +245,12 @@ var cmdFetch = cli.Command{
 
 		err = lib.GetBinaryForVersion("go-ipfs", "ipfs", util.IpfsVersionPath, vers, output)
 		if err != nil {
-			stump.Fatal("failed to fetch binary: ", err)
+			stump.Fatal("Failed to fetch binary: ", err)
 		}
 
 		err = os.Chmod(output, 0755)
 		if err != nil {
-			stump.Fatal("setting new binary executable: ", err)
+			stump.Fatal("Setting new binary executable: ", err)
 		}
 		return nil
 	},
