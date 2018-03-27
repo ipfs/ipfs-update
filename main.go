@@ -137,6 +137,34 @@ var cmdInstall = cli.Command{
 	},
 }
 
+var cmdUpgrade = cli.Command{
+	Name:      "upgrade",
+	Usage:     "Upgrade to the latest version of ipfs.",
+	Action: func(c *cli.Context) error {
+		latest, err := lib.GetLatestVersion(util.IpfsVersionPath, "go-ipfs")
+		if err != nil {
+			stump.Fatal("error resolving 'latest': ", err)
+		}
+		vers = latest
+		i, err := lib.NewInstall(util.IpfsVersionPath, vers, c.Bool("no-check"))
+		if err != nil {
+			return err
+		}
+
+		err = i.Run()
+		if err != nil {
+			return err
+		}
+		stump.Log("\nInstallation complete!")
+
+		if util.HasDaemonRunning() {
+			stump.Log("Remember to restart your daemon before continuing.")
+		}
+
+		return nil
+	},
+}
+
 var cmdStash = cli.Command{
 	Name:  "stash",
 	Usage: "stashes copy of currently installed ipfs binary",
