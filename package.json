@@ -22,6 +22,12 @@
       "hash": "Qmc1AtgBdoUHP8oYSqU81NRYdzohmF45t5XNwVMvhCxsBA",
       "name": "cli",
       "version": "1.19.1"
+    },
+    {
+      "author": "The Go Authors",
+      "hash": "QmPXvegq26x982cQjSfbTvSzZXn7GiaMwhhVPHkeTEhrPT",
+      "name": "sys",
+      "version": "0.1.0"
     }
   ],
   "gxVersion": "0.11.0",

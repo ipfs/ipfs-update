@@ -22,6 +22,7 @@ var (
 	GlobalGatewayUrl = "https://ipfs.io"
 	LocalApiUrl      = "http://localhost:5001"
 	IpfsVersionPath  = "/ipns/dist.ipfs.io"
+	removeFallback   func(path string) error
 )
 
 func init() {
@@ -124,6 +125,12 @@ func CopyTo(src, dest string) error {
 	}
 	defer fi.Close()
 
+	if runtime.GOOS == "windows" {
+		if err := removeFallback(dest); err != nil {
+			return fmt.Errorf("copy dest exists and can not be deleted: %s", err)
+		}
+	}
+
 	trgt, err := os.Create(dest)
 	if err != nil {
 		return err
@@ -140,6 +147,12 @@ func Move(src, dest string) error {
 		return err
 	}
 
+	if runtime.GOOS == "windows" {
+		if err := removeFallback(src); err != nil {
+			return fmt.Errorf("move src can not be deleted: %s", err)
+		}
+		return nil
+	}
 	return os.Remove(src)
 }
 
