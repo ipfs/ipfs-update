@@ -203,7 +203,7 @@ func BeforeVersion(check, cur string) bool {
 }
 
 func BoldText(s string) string {
-	return fmt.Sprintf("\033[1m%s\033[0m")
+	return fmt.Sprintf("\033[1m%s\033[0m", s)
 }
 
 func OsExeFileName(s string) string {
