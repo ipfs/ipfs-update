@@ -326,14 +326,14 @@ func findGoodInstallDir() (string, error) {
 			gorootbin := filepath.Join(goroot, "bin")
 			candidates = append(candidates, gorootbin)
 		}
-		
+
 		// Directory of last resort on Windows, guaranteed to work unless the system is borked
 		if systemroot := os.Getenv("SYSTEMROOT"); systemroot != "" {
 			systemrootbin := filepath.Join(systemroot, "system32")
 			candidates = append(candidates, systemrootbin)
 		}
 	}
-	
+
 	// Finally /usr/bin
 	candidates = append(candidates, "/usr/bin")
 	// Test if it makes sense to install to any of those
