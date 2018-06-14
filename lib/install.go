@@ -203,7 +203,7 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 	// write the old path of the binary to the backup dir
 	err = ioutil.WriteFile(pathpath, []byte(loc), 0644)
 	if err != nil {
-		return "", fmt.Errorf("couldnt stash path: %s", err)
+		return "", fmt.Errorf("could not stash path: %s", err)
 	}
 
 	f := util.Move
