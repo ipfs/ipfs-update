@@ -115,7 +115,7 @@ func newLimitReadCloser(rc io.ReadCloser, limit int64) io.ReadCloser {
 	}
 }
 
-// This function is needed because os.Rename doesnt work across filesystem
+// [2018.06.06] This function is needed because os.Rename doesn't work across filesystem
 // boundaries.
 func CopyTo(src, dest string) error {
 	fi, err := os.Open(src)

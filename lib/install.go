@@ -184,6 +184,10 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not find old binary: %s", err)
 	}
+	loc, err = filepath.Abs(loc)
+	if err != nil {
+		return "", fmt.Errorf("could not determine absolute path for old binary: %s", err)
+	}
 
 	ipfsdir := util.IpfsDir()
 
@@ -199,7 +203,7 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 	// write the old path of the binary to the backup dir
 	err = ioutil.WriteFile(pathpath, []byte(loc), 0644)
 	if err != nil {
-		return "", fmt.Errorf("couldnt stash path: %s", err)
+		return "", fmt.Errorf("could not stash path: %s", err)
 	}
 
 	f := util.Move
@@ -298,44 +302,44 @@ func findGoodInstallDir() (string, error) {
 	// GOPATH(s)/bin
 	gopath := os.Getenv("GOPATH")
 	if gopath != "" {
-		gopaths := strings.Split(gopath, ":")
+		gopaths := strings.Split(gopath, string(os.PathListSeparator))
 		for i, _ := range gopaths {
 			gopaths[i] = filepath.Join(gopaths[i], "bin")
 		}
 		candidates = append(candidates, gopaths...)
 	}
 
-	candidates = append(candidates, "/usr/local/bin")
-
-	// Let's try user's $HOME/bin too
-	// but not root because no one installs to /root/bin
-	if home := os.Getenv("HOME"); home != "" && os.Getenv("USER") != "root" {
-		homebin := filepath.Join(home, "bin")
-		candidates = append(candidates, homebin)
-	}
-
 	if runtime.GOOS == "windows" {
-		// Profile specific, Go devs would normally have this set
-		if profile := os.Getenv("USERPROFILE"); profile != "" {
-			profilebin := filepath.Join(profile, "go", "bin")
-			candidates = append(candidates, profilebin)
+		// Use Go's default bin path if GOPATH is unset
+		if gopath == "" {
+			if profile := os.Getenv("USERPROFILE"); profile != "" {
+				profilebin := filepath.Join(profile, "go", "bin")
+				candidates = append(candidates, profilebin)
+			}
 		}
 
-		// If Go is installed, this should be in PATH
-		if goroot := os.Getenv("GOROOT"); goroot != "" {
-			gorootbin := filepath.Join(goroot, "bin")
-			candidates = append(candidates, gorootbin)
+		cwd, err := os.Getwd()
+		if err == nil {
+			candidates = append(candidates, cwd)
 		}
 
-		// Directory of last resort on Windows, guaranteed to work unless the system is borked
-		if systemroot := os.Getenv("SYSTEMROOT"); systemroot != "" {
-			systemrootbin := filepath.Join(systemroot, "system32")
-			candidates = append(candidates, systemrootbin)
+		ep, err := os.Executable()
+		if err == nil {
+			candidates = append(candidates, filepath.Dir(ep))
 		}
+	} else {
+		candidates = append(candidates, "/usr/local/bin")
+
+		// Let's try user's $HOME/bin too
+		// but not root because no one installs to /root/bin
+		if home := os.Getenv("HOME"); home != "" && os.Getenv("USER") != "root" {
+			homebin := filepath.Join(home, "bin")
+			candidates = append(candidates, homebin)
+		}
+		// Finally /usr/bin
+		candidates = append(candidates, "/usr/bin")
 	}
 
-	// Finally /usr/bin
-	candidates = append(candidates, "/usr/bin")
 	// Test if it makes sense to install to any of those
 	for _, dir := range candidates {
 		if canWrite(dir) && isInPath(dir) {
