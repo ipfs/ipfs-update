@@ -10,7 +10,7 @@
 
 ## Install
 
-Requirement: Go version 1.8 or higher.
+Requirement: Go version 1.10 or higher.
 
 ```sh
 go get -u github.com/ipfs/ipfs-update
