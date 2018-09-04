@@ -38,8 +38,8 @@ Prints out all versions of ipfs available for installation.
 
 `$ ipfs-update install <version>`
 
-Downloads, tests, and installs the specified version
-of ipfs. The existing version is stashed in case a revert is needed.
+Downloads, tests, and installs the specified version (or "latest" for
+latest version) of ipfs. The existing version is stashed in case a revert is needed.
 
 #### revert
 
