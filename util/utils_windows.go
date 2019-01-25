@@ -10,7 +10,7 @@ import (
 
 func init() {
 	// attempts to remove path or move it to the systems temporary directory
-	removeFallback = func(path string) error {
+	forceRemove = func(path string) error {
 		if _, err := os.Stat(path); err == nil {
 			if err = os.Remove(path); err != nil {
 				//fallback for when file is still in use (likely the daemon is up)
