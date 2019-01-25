@@ -22,6 +22,11 @@ var (
 	GlobalGatewayUrl = "https://ipfs.io"
 	LocalApiUrl      = "http://localhost:5001"
 	IpfsVersionPath  = "/ipns/dist.ipfs.io"
+	// forceRemove tries to remove a file, even if it's in-use. On windows,
+	// this function will move open files to a temporary directory.
+	forceRemove = func(path string) error {
+		return os.Remove(path)
+	}
 )
 
 func init() {
@@ -124,6 +129,14 @@ func CopyTo(src, dest string) error {
 	}
 	defer fi.Close()
 
+	if runtime.GOOS == "windows" {
+		// On windows, we need to remove this file first if it's in-use
+		// (i.e., IPFS is running).
+		if err := forceRemove(dest); err != nil {
+			return fmt.Errorf("copy dest exists and can not be deleted: %s", err)
+		}
+	}
+
 	trgt, err := os.Create(dest)
 	if err != nil {
 		return err
@@ -140,7 +153,7 @@ func Move(src, dest string) error {
 		return err
 	}
 
-	return os.Remove(src)
+	return forceRemove(src)
 }
 
 func IpfsDir() string {
