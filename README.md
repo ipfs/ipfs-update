@@ -9,8 +9,12 @@
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
 ## Install
+From binary:  
+https://dist.ipfs.io/#ipfs-update
 
-Requirement: Go version 1.10 or higher.
+
+From source:  
+(Requires Go version 1.10 or higher)
 
 ```sh
 go get -u github.com/ipfs/ipfs-update
