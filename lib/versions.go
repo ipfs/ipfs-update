@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"os/exec"
+	"sort"
 	"strings"
 
+	"github.com/coreos/go-semver/semver"
 	api "github.com/ipfs/go-ipfs-api"
-	util "github.com/ipfs/ipfs-update/util"
-	stump "github.com/whyrusleeping/stump"
+	"github.com/ipfs/ipfs-update/util"
+	"github.com/whyrusleeping/stump"
 )
 
 func GetVersions(ipfspath, dist string) ([]string, error) {
@@ -18,10 +20,21 @@ func GetVersions(ipfspath, dist string) ([]string, error) {
 	}
 	defer rc.Close()
 
-	var out []string
+	var (
+		prefix       = "v"
+		versionSlice []*semver.Version
+	)
+
 	scan := bufio.NewScanner(rc)
 	for scan.Scan() {
-		out = append(out, scan.Text())
+		versionSlice = append(versionSlice, semver.New(strings.TrimLeft(scan.Text(), prefix)))
+	}
+
+	sort.Sort(sort.Reverse(semver.Versions(versionSlice)))
+
+	out := make([]string, len(versionSlice))
+	for i := 0; i < len(versionSlice); i++ {
+		out[i] = prefix + versionSlice[i].String()
 	}
 
 	return out, nil
@@ -67,7 +80,7 @@ func GetLatestVersion(ipfspath, dist string) (string, error) {
 		return "", err
 	}
 	var latest string
-	for i := len(vs) - 1; i >= 0; i-- {
+	for i := 0; i < len(vs); i++ {
 		if !strings.Contains(vs[i], "-dev") {
 			latest = vs[i]
 			break
@@ -76,5 +89,5 @@ func GetLatestVersion(ipfspath, dist string) (string, error) {
 	if latest == "" {
 		return "", fmt.Errorf("couldnt find a non dev version in the list")
 	}
-	return vs[len(vs)-1], nil
+	return vs[0], nil
 }
