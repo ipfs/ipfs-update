@@ -9,17 +9,26 @@
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
 ## Install
-From binary:  
-https://dist.ipfs.io/#ipfs-update
 
+You can either install a pre-built binary or build `ipfs-update` from source.
 
-From source:  
-(Requires Go version 1.10 or higher)
+### Pre-built Binaries
+
+You can download pre-built binaries at: https://dist.ipfs.io/#ipfs-update
+
+### From Source
+
+`ipfs-update` uses go modules and requires Go version 1.12 or higher:
 
 ```sh
-go get -u github.com/ipfs/ipfs-update
+# You need to CD to a directory _outside_ of your GOPATH.
+$ cd /
+# Install with go modules enabled
+$ GO111MODULE=on go get github.com/ipfs/ipfs-update
 ```
-Note that your $GOPATH/bin should be within $PATH for the result ipfs-update binary to be found.
+
+Note: Your $GOPATH/bin should be within $PATH for the result ipfs-update binary
+to be found.
 
 ## Usage
 
