@@ -64,7 +64,7 @@ back to your older stable installation.
 
 #### fetch
 
-`$ ipfs-update fetch`
+`$ ipfs-update fetch [version]`
 
 Downloads the specified version of ipfs into your current
 directory. This is a plumbing command that can be utilized in scripts or by
