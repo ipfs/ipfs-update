@@ -8,10 +8,11 @@ os:
 language: go
 
 go:
-  - "1.10.2"
+  - "1.13.1"
 
 env:
   - TEST_VERBOSE=1
+  - GO111MODULE=on
 
 script:
   - cd sharness
