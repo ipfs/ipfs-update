@@ -295,63 +295,111 @@ func (i *Install) SelectGoodInstallLoc() error {
 var errNoGoodInstall = fmt.Errorf("could not find good install location")
 
 func findGoodInstallDir() (string, error) {
-	// Gather some candidate locations
-	// The first ones have more priority than the last ones
-	var candidates []string
-
-	// GOPATH(s)/bin
-	gopath := os.Getenv("GOPATH")
-	if gopath != "" {
-		gopaths := strings.Split(gopath, string(os.PathListSeparator))
-		for i, _ := range gopaths {
-			gopaths[i] = filepath.Join(gopaths[i], "bin")
-		}
-		candidates = append(candidates, gopaths...)
+	sysPath := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
+	for i, s := range sysPath {
+		sysPath[i] = filepath.Clean(s)
 	}
-
-	if runtime.GOOS == "windows" {
-		// Use Go's default bin path if GOPATH is unset
-		if gopath == "" {
-			if profile := os.Getenv("USERPROFILE"); profile != "" {
-				profilebin := filepath.Join(profile, "go", "bin")
-				candidates = append(candidates, profilebin)
+	inPath := func(s string) bool {
+		for _, p := range sysPath {
+			if p == s {
+				return true
 			}
 		}
+		return false
+	}
 
+	// First, try the user's GOBIN directory. If it's configured and is in
+	// the user's path, use it.
+	gobin, err := exec.Command("go", "env", "GOBIN").Output()
+	if err == nil && len(gobin) > 0 {
+		gobin := filepath.Clean(string(gobin))
+		if inPath(gobin) && ensure(gobin) {
+			return gobin, nil
+		}
+	}
+
+	// Then, if the user has go installed and has setup a go environment
+	// _AND_ has added it's bin directory to their path, prefer that.
+	gopath, err := exec.Command("go", "env", "GOPATH").Output()
+	if err == nil {
+		gopaths := strings.Split(string(gopath), string(os.PathListSeparator))
+		for _, path := range gopaths {
+			path = filepath.Join(path, "bin")
+			if inPath(path) && ensure(path) {
+				return path, nil
+			}
+		}
+	}
+
+	// If we're on windows, we don't have many options. Try the current
+	// directory then try the directory with this binary.
+	if runtime.GOOS == "windows" {
 		cwd, err := os.Getwd()
 		if err == nil {
-			candidates = append(candidates, cwd)
+			cwd = filepath.Clean(cwd)
+			if inPath(cwd) && canWrite(cwd) {
+				return cwd, nil
+			}
 		}
 
 		ep, err := os.Executable()
 		if err == nil {
-			candidates = append(candidates, filepath.Dir(ep))
+			dir := filepath.Clean(filepath.Dir(ep))
+			if inPath(dir) && canWrite(dir) {
+				return dir, nil
+			}
 		}
-	} else {
-		candidates = append(candidates, "/usr/local/bin")
-
-		// Let's try user's $HOME/bin too
-		// but not root because no one installs to /root/bin
-		if home := os.Getenv("HOME"); home != "" && os.Getenv("USER") != "root" {
-			homebin := filepath.Join(home, "bin")
-			candidates = append(candidates, homebin)
-		}
-		// Finally /usr/bin
-		candidates = append(candidates, "/usr/bin")
+		return "", errNoGoodInstall
 	}
 
-	// Test if it makes sense to install to any of those
-	for _, dir := range candidates {
-		if canWrite(dir) && isInPath(dir) {
-			return dir, nil
+	// If we're root, prefer /usr/local/bin and /usr/bin. Root usually installs _globally_.
+	if os.Getuid() == 0 {
+		for _, path := range []string{"/usr/local/bin", "/usr/bin"} {
+			if inPath(path) && canWrite(path) {
+				return path, nil
+			}
+		}
+	}
+
+	// If we can get the user's home directory, try the two known locations.
+	if homedir, err := os.UserHomeDir(); err == nil {
+		tryPaths := []string{
+			filepath.Join(homedir, ".local", "bin"), // xdg
+			filepath.Join(homedir, "bin"),           // old way
+		}
+
+		// Filter to paths that are in PATH
+		userPaths := tryPaths[:0]
+		for _, path := range tryPaths {
+			if inPath(path) {
+				userPaths = append(userPaths, path)
+			}
+		}
+
+		// Try installing in the first path that exists.
+		for _, path := range userPaths {
+			if canWrite(path) {
+				return path, nil
+			}
+		}
+
+		// Try creating a path.
+		for _, path := range userPaths {
+			if ensure(path) {
+				return path, nil
+			}
 		}
 	}
 
 	return "", errNoGoodInstall
 }
 
-func isInPath(dir string) bool {
-	return strings.Contains(os.Getenv("PATH"), dir)
+func ensure(dir string) bool {
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		return false
+	}
+	return canWrite(dir)
 }
 
 func canWrite(dir string) bool {

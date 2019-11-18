@@ -70,6 +70,39 @@ Downloads the specified version of ipfs into your current
 directory. This is a plumbing command that can be utilized in scripts or by
 more advanced users.
 
+## Install Location
+
+`ipfs-update` tries to intelligently pick the correct install location for
+go-ipfs.
+
+1. If you have go-ipfs installed, `ipfs-update` will install over your existing install.
+2. If you have a Go development environment setup, it will install go-ipfs along
+   with all of your other go programs.
+3. Otherwise, it will try to pick a sane, writable install location.
+
+Specifically, `ipfs-update` will install go-ipfs according to the following
+algorithm:
+
+0. If `go-ipfs` is already installed and in your PATH, `ipfs-update` will
+   replace it. `ipfs-update` will _fail_ if it can't and won't try to install
+   elsewhere.
+1. If Go is installed:
+  1. [GOBIN][go-env] if GOBIN is in your PATH.
+  2. For each `$path` in GOPATH, `$path/bin` if it's in your PATH.
+2. On Windows:
+  1. The current directory if it's writable and in your PATH.
+  2. The directory where the ipfs-update executable lives if it's executable and in your path.
+3. On all platforms _except_ Windows:
+  1. If root:
+    1. `/usr/local/bin` if it exists, is writable, and is in your PATH.
+    2. `/usr/bin` if it exists, is writable, and is in your PATH.
+  2. `$HOME/.local/bin` if it exists, is writable, and is in your PATH.
+  3. `$HOME/bin` if it exists, is writable, and is in your PATH.
+  4. `$HOME/.local/bin` if we can create it and it's in your PATH.
+  5. `$HOME/bin` if we can create it and it's in your PATH.
+
+[go-env]: https://golang.org/cmd/go/#hdr-Environment_variables
+
 ## Contribute
 
 Feel free to join in. All welcome. Open an [issue](https://github.com/ipfs/ipfs-update/issues)!
