@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os/exec"
 	"sort"
@@ -60,14 +61,20 @@ func GetCurrentVersion() (string, error) {
 
 	stump.VLog("daemon check failed: %s", err)
 
-	_, err = exec.LookPath("ipfs")
-	if err != nil {
-		return "none", nil
-	}
+	/*
+		_, err = exec.LookPath("ipfs")
+		if err != nil {
+			return "none", nil
+		}
+	*/
 
 	// try running the ipfs binary in the users path
 	out, err := exec.Command("ipfs", "version", "-n").CombinedOutput()
-	if err != nil {
+	switch {
+	case errors.Is(err, new(exec.Error)):
+		// executable not found
+		return "none", nil
+	case err != nil:
 		return "", fmt.Errorf("version check failed: %s - %s", string(out), err)
 	}
 
