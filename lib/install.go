@@ -300,7 +300,7 @@ func goenv(env string) (string, error) {
 }
 
 func findGoodInstallDir() (string, error) {
-	sysPath := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
+	sysPath := filepath.SplitList(os.Getenv("PATH"))
 	for i, s := range sysPath {
 		sysPath[i] = filepath.Clean(s)
 	}
@@ -328,12 +328,12 @@ func findGoodInstallDir() (string, error) {
 	// _AND_ has added it's bin directory to their path, prefer that.
 	gopath, err := goenv("GOPATH")
 	if err == nil {
-		gopaths := strings.Split(gopath, string(os.PathListSeparator))
+		gopaths := filepath.SplitList(gopath)
 		for _, path := range gopaths {
 			gobin := filepath.Clean(filepath.Join(path, "bin"))
 			stump.Log("checking if we should install in GOPATH: %s", gobin)
 			if inPath(gobin) && ensure(gobin) {
-				return path, nil
+				return gobin, nil
 			}
 		}
 	}
