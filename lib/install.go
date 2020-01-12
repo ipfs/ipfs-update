@@ -294,6 +294,11 @@ func (i *Install) SelectGoodInstallLoc() error {
 
 var errNoGoodInstall = fmt.Errorf("could not find good install location")
 
+func goenv(env string) (string, error) {
+	value, err := exec.Command("go", "env", env).Output()
+	return strings.TrimRight(string(value), "\r\n"), err
+}
+
 func findGoodInstallDir() (string, error) {
 	sysPath := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
 	for i, s := range sysPath {
@@ -310,9 +315,9 @@ func findGoodInstallDir() (string, error) {
 
 	// First, try the user's GOBIN directory. If it's configured and is in
 	// the user's path, use it.
-	gobin, err := exec.Command("go", "env", "GOBIN").Output()
+	gobin, err := goenv("GOBIN")
 	if err == nil && len(gobin) > 0 {
-		gobin := filepath.Clean(string(gobin))
+		gobin := filepath.Clean(gobin)
 		if inPath(gobin) && ensure(gobin) {
 			return gobin, nil
 		}
@@ -320,12 +325,12 @@ func findGoodInstallDir() (string, error) {
 
 	// Then, if the user has go installed and has setup a go environment
 	// _AND_ has added it's bin directory to their path, prefer that.
-	gopath, err := exec.Command("go", "env", "GOPATH").Output()
+	gopath, err := goenv("GOPATH")
 	if err == nil {
-		gopaths := strings.Split(string(gopath), string(os.PathListSeparator))
+		gopaths := strings.Split(gopath, string(os.PathListSeparator))
 		for _, path := range gopaths {
-			path = filepath.Join(path, "bin")
-			if inPath(path) && ensure(path) {
+			gobin := filepath.Clean(filepath.Join(path, "bin"))
+			if inPath(gobin) && ensure(gobin) {
 				return path, nil
 			}
 		}
