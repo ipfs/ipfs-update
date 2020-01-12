@@ -294,6 +294,11 @@ func (i *Install) SelectGoodInstallLoc() error {
 
 var errNoGoodInstall = fmt.Errorf("could not find good install location")
 
+func goenv(env string) (string, error) {
+	value, err := exec.Command("go", "env", env).Output()
+	return strings.TrimRight(string(value), "\r\n"), err
+}
+
 func findGoodInstallDir() (string, error) {
 	sysPath := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
 	for i, s := range sysPath {
@@ -310,9 +315,10 @@ func findGoodInstallDir() (string, error) {
 
 	// First, try the user's GOBIN directory. If it's configured and is in
 	// the user's path, use it.
-	gobin, err := exec.Command("go", "env", "GOBIN").Output()
+	gobin, err := goenv("GOBIN")
 	if err == nil && len(gobin) > 0 {
-		gobin := filepath.Clean(string(gobin))
+		stump.Log("checking if we should install in GOBIN: %s", gobin)
+		gobin := filepath.Clean(gobin)
 		if inPath(gobin) && ensure(gobin) {
 			return gobin, nil
 		}
@@ -320,12 +326,13 @@ func findGoodInstallDir() (string, error) {
 
 	// Then, if the user has go installed and has setup a go environment
 	// _AND_ has added it's bin directory to their path, prefer that.
-	gopath, err := exec.Command("go", "env", "GOPATH").Output()
+	gopath, err := goenv("GOPATH")
 	if err == nil {
-		gopaths := strings.Split(string(gopath), string(os.PathListSeparator))
+		gopaths := strings.Split(gopath, string(os.PathListSeparator))
 		for _, path := range gopaths {
-			path = filepath.Join(path, "bin")
-			if inPath(path) && ensure(path) {
+			gobin := filepath.Clean(filepath.Join(path, "bin"))
+			stump.Log("checking if we should install in GOPATH: %s", gobin)
+			if inPath(gobin) && ensure(gobin) {
 				return path, nil
 			}
 		}
@@ -334,6 +341,7 @@ func findGoodInstallDir() (string, error) {
 	// If we're on windows, we don't have many options. Try the current
 	// directory then try the directory with this binary.
 	if runtime.GOOS == "windows" {
+		stump.Log("checking known windows install locations")
 		cwd, err := os.Getwd()
 		if err == nil {
 			cwd = filepath.Clean(cwd)
@@ -354,6 +362,7 @@ func findGoodInstallDir() (string, error) {
 
 	// If we're root, prefer /usr/local/bin and /usr/bin. Root usually installs _globally_.
 	if os.Getuid() == 0 {
+		stump.Log("checking root install locations")
 		for _, path := range []string{"/usr/local/bin", "/usr/bin"} {
 			if inPath(path) && canWrite(path) {
 				return path, nil
@@ -363,6 +372,7 @@ func findGoodInstallDir() (string, error) {
 
 	// If we can get the user's home directory, try the two known locations.
 	if homedir, err := os.UserHomeDir(); err == nil {
+		stump.Log("checking user install locations")
 		tryPaths := []string{
 			filepath.Join(homedir, ".local", "bin"), // xdg
 			filepath.Join(homedir, "bin"),           // old way
