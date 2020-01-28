@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -21,6 +24,24 @@ func init() {
 }
 
 func main() {
+	// HACK: [Windows compat] InsideGUI must be called before any text is printed to the console because that's how the WINAPI works (not my fault)
+	if runtime.GOOS == "windows" {
+		const windowsHelpURL = "https://youtu.be/UCQTSszdVmQ"
+		if len(os.Args) == 1 && util.InsideGUI() {
+			_, exeName := filepath.Split(os.Args[0])
+			stump.Log(`%q is a command line application.
+If you would like to open a video demonstrating how to use it, press return/enter.
+(Will open browser with %q)
+Otherwise you can close this window.`, exeName, windowsHelpURL)
+			bufio.NewReader(os.Stdin).ReadBytes('\n')
+			if err := exec.Command("rundll32", "url.dll,FileProtocolHandler", windowsHelpURL).Start(); err != nil {
+				stump.Error("failed to launch browser: %s", err)
+				bufio.NewReader(os.Stdin).ReadBytes('\n')
+				return
+			}
+		}
+	}
+
 	app := cli.NewApp()
 	app.Usage = "Update ipfs."
 	app.Version = config.CurrentVersionNumber

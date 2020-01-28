@@ -11,6 +11,7 @@ import (
 func init() {
 	// attempts to remove path or move it to the systems temporary directory
 	forceRemove = winForceRemove
+	InsideGUI = winInsideGUI
 }
 
 func winForceRemove(path string) error {
@@ -24,4 +25,18 @@ func winForceRemove(path string) error {
 		}
 	}
 	return nil
+}
+func winInsideGUI() bool {
+	conhostInfo := &windows.ConsoleScreenBufferInfo{}
+	if err := windows.GetConsoleScreenBufferInfo(windows.Stdout, conhostInfo); err != nil {
+		return false
+	}
+
+	if (conhostInfo.CursorPosition.X | conhostInfo.CursorPosition.Y) == 0 {
+		// console cursor has not moved prior to our execution
+		// high probability that we're not in a terminal
+		return true
+	}
+
+	return false
 }

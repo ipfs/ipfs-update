@@ -27,6 +27,8 @@ var (
 	forceRemove = func(path string) error {
 		return os.Remove(path)
 	}
+
+	InsideGUI = func() bool { return false }
 )
 
 func init() {
