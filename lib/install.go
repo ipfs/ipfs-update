@@ -356,6 +356,14 @@ func findGoodInstallDir() (string, error) {
 			if inPath(dir) && canWrite(dir) {
 				return dir, nil
 			}
+
+			if cwd == dir && canWrite(dir) {
+				_, exeName := filepath.Split(ep)
+				// [2020.01.28] on Windows, the "command search sequence" includes the current directory
+				// while not included in %PATH%, it should be rare that this branch is traversed on accident and is likely expected to succeed on this platform
+				stump.Log("current working directory is not within %%PATH%% variable, but %q exists in cwd; using cwd as install target", exeName)
+				return dir, nil
+			}
 		}
 		return "", errNoGoodInstall
 	}

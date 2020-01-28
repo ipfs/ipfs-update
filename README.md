@@ -92,6 +92,7 @@ algorithm:
 2. On Windows:
   1. The current directory if it's writable and in your PATH.
   2. The directory where the ipfs-update executable lives if it's executable and in your path.
+  3. The directory where the ipfs-update executable lives if it's executable and in your current working directory.
 3. On all platforms _except_ Windows:
   1. If root:
     1. `/usr/local/bin` if it exists, is writable, and is in your PATH.
