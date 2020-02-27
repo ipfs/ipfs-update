@@ -42,14 +42,16 @@ const fetchSizeLimit = 1024 * 1024 * 512
 func ApiEndpoint(ipfspath string) (string, error) {
 	apifile := filepath.Join(ipfspath, "api")
 
-	val, err := ioutil.ReadFile(apifile)
+	valbytes, err := ioutil.ReadFile(apifile)
 	if err != nil {
 		return "", err
 	}
 
-	parts := strings.Split(string(val), "/")
+	val := strings.TrimSpace(string(valbytes))
+
+	parts := strings.Split(val, "/")
 	if len(parts) != 5 {
-		return "", fmt.Errorf("incorrectly formatted api string: %q", string(val))
+		return "", fmt.Errorf("incorrectly formatted api string: %q", val)
 	}
 
 	return parts[2] + ":" + parts[4], nil
