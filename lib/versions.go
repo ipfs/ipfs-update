@@ -52,7 +52,8 @@ func GetCurrentVersion() (string, error) {
 	apiurl, err := util.ApiEndpoint(util.IpfsDir())
 	if err == nil {
 		sh := api.NewShell(apiurl)
-		v, _, err := sh.Version()
+		var v string
+		v, _, err = sh.Version()
 		if err == nil {
 			return fix(v), nil
 		}
