@@ -76,7 +76,7 @@ func RunMigration(oldv, newv string) error {
 		return err
 	}
 
-	cmd := exec.Command(migrateBin, "-to", newv, "-y")
+	cmd := exec.Command(migrateBin, "-to", newv, "-y", "--revert-ok")
 
 	cmd.Stdout = stump.LogOut
 	cmd.Stderr = stump.ErrOut
