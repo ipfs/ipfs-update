@@ -39,7 +39,7 @@ test_expect_success  "'ipfs-update install' fails when downgrading without the d
 '
 
 test_expect_success "'ipfs-update install' works when downgrading with flag" '
-	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install --downgrade v0.3.8" >actual 2>&1 ||
+	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install --allow-downgrade v0.3.8" >actual 2>&1 ||
 	test_fsh cat actual
 '
 

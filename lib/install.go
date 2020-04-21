@@ -88,7 +88,7 @@ func (i *Install) Run() error {
 			return err
 		}
 		if semverTarget.LT(semverCurrent) {
-			return errors.New("in order to downgrade, please pass the --downgrade flag or use \"revert\"")
+			return errors.New("in order to downgrade, please pass the --allow-downgrade flag or use \"revert\"")
 		}
 	}
 
