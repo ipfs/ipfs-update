@@ -4,7 +4,7 @@ package config
 const CurrentAppName = "ipfs-update"
 
 // CurrentVersionNumber is the current application's version literal
-const CurrentVersionNumber = "1.6.0"
+const CurrentVersionNumber = "1.6.1-dev"
 
 // CurrentCommit is the current git commit, if it is available.
 // It might not be currently available, but it might be later if we
