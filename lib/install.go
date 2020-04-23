@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/blang/semver"
 	test "github.com/ipfs/ipfs-update/test-dist"
 	util "github.com/ipfs/ipfs-update/util"
 	stump "github.com/whyrusleeping/stump"
@@ -29,11 +31,12 @@ func (i *Install) getTmpPath() (string, error) {
 	return filepath.Join(tmpd, util.OsExeFileName("ipfs-new")), nil
 }
 
-func NewInstall(root, target string, nocheck bool) (*Install, error) {
+func NewInstall(root, target string, nocheck, downgrade bool) (*Install, error) {
 	return &Install{
 		TargetVers: target,
 		UrlRoot:    root,
 		NoCheck:    nocheck,
+		Downgrade:  downgrade,
 		BinaryName: util.OsExeFileName("ipfs"),
 	}, nil
 }
@@ -51,7 +54,8 @@ type Install struct {
 
 	InstallPath string
 
-	NoCheck bool
+	NoCheck   bool
+	Downgrade bool
 
 	UrlRoot string
 
@@ -74,6 +78,18 @@ func (i *Install) Run() error {
 		stump.Log("Already have version %s installed, skipping.", i.TargetVers)
 		i.Succeeded = true
 		return nil
+	} else if !i.Downgrade {
+		semverCurrent, err := semver.ParseTolerant(i.CurrentVers)
+		if err != nil {
+			return err
+		}
+		semverTarget, err := semver.ParseTolerant(i.TargetVers)
+		if err != nil {
+			return err
+		}
+		if semverTarget.LT(semverCurrent) {
+			return errors.New("in order to downgrade, please pass the --allow-downgrade flag or use \"revert\"")
+		}
 	}
 
 	err = i.DownloadNewBinary()

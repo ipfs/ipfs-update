@@ -29,7 +29,17 @@ test_expect_success "'ipfs-update version' output looks good" '
 '
 
 test_expect_success "'ipfs-update install' works when something is installed" '
-	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install v0.3.8" >actual 2>&1 ||
+	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install v0.4.23" >actual 2>&1 ||
+	test_fsh cat actual
+'
+
+test_expect_success  "'ipfs-update install' fails when downgrading without the downgrade flag" '
+	test_must_fail exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install v0.3.8" >actual 2>&1 ||
+	test_fsh cat actual
+'
+
+test_expect_success "'ipfs-update install' works when downgrading with flag" '
+	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install --allow-downgrade v0.3.8" >actual 2>&1 ||
 	test_fsh cat actual
 '
 

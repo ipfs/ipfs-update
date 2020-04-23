@@ -120,6 +120,10 @@ var cmdInstall = cli.Command{
 			Name:  "no-check",
 			Usage: "Skip pre-install tests.",
 		},
+		cli.BoolFlag{
+			Name:  "allow-downgrade",
+			Usage: "Allow downgrading. WARNING: Downgrades may require running reverse migrations.",
+		},
 	},
 	Action: func(c *cli.Context) error {
 		vers := c.Args().First()
@@ -139,7 +143,12 @@ var cmdInstall = cli.Command{
 			vers = "v" + vers
 		}
 
-		i, err := lib.NewInstall(util.IpfsVersionPath, vers, c.Bool("no-check"))
+		i, err := lib.NewInstall(
+			util.IpfsVersionPath,
+			vers,
+			c.Bool("no-check"),
+			c.Bool("allow-downgrade"),
+		)
 		if err != nil {
 			return err
 		}
@@ -195,8 +204,13 @@ var cmdRevert = cli.Command{
 	ArgsUsage: " ",
 	Description: `'revert' will check if a previous update left a stashed
    binary and overwrite the current ipfs binary with it.
+
+   Using 'revert' will not run any datastore migrations. For that, use
+   'ipfs-update install --allow-downgrade <prev-version>'.
+
    If multiple previous versions exist, you will be prompted to select the
-   desired binary.`,
+   desired binary.
+`,
 	Action: func(c *cli.Context) error {
 		oldbinpath, err := lib.SelectRevertBin()
 		if err != nil {
