@@ -28,7 +28,8 @@ var (
 		return os.Remove(path)
 	}
 
-	InsideGUI = func() bool { return false }
+	InsideGUI    = func() bool { return false }
+	ShellTimeOut = 30 * time.Minute
 )
 
 func init() {
@@ -98,17 +99,15 @@ func Fetch(ipfspath string) (io.ReadCloser, error) {
 	ep, err := ApiEndpoint(IpfsDir())
 	if err == nil {
 		sh := api.NewShell(ep)
+		sh.SetTimeout(ShellTimeOut)
 		if sh.IsUp() {
 			stump.VLog("  - using local ipfs daemon for transfer")
 			rc, err := sh.Cat(ipfspath)
-			if err != nil {
-				return nil, err
+			if err == nil {
+				return newLimitReadCloser(rc, fetchSizeLimit), nil
 			}
-
-			return newLimitReadCloser(rc, fetchSizeLimit), nil
 		}
 	}
-
 	return httpFetch(GlobalGatewayUrl + ipfspath)
 }
 
