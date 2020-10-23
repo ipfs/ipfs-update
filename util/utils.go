@@ -29,7 +29,7 @@ var (
 	}
 
 	InsideGUI    = func() bool { return false }
-	ShellTimeOut = 30 * time.Minute
+	ShellTimeOut = 3 * time.Minute
 )
 
 func init() {
