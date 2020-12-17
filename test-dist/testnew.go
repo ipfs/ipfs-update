@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	util "github.com/ipfs/ipfs-update/util"
 	stump "github.com/whyrusleeping/stump"
 )
@@ -22,7 +23,7 @@ func runCmd(p, bin string, args ...string) (string, error) {
 	if runtime.GOOS == "windows" {
 		cmd.Env = os.Environ()
 	}
-	cmd.Env = util.ReplaceEnvVarIfExists(cmd.Env, "IPFS_PATH", p)
+	cmd.Env = replaceEnvVarIfExists(cmd.Env, "IPFS_PATH", p)
 	stump.VLog("  - running: %s", cmd.Args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -116,7 +117,7 @@ func StartDaemon(p, bin string) (io.Closer, error) {
 	if runtime.GOOS == "windows" {
 		cmd.Env = os.Environ()
 	}
-	cmd.Env = util.ReplaceEnvVarIfExists(cmd.Env, "IPFS_PATH", p)
+	cmd.Env = replaceEnvVarIfExists(cmd.Env, "IPFS_PATH", p)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
@@ -146,7 +147,7 @@ func waitForApi(ipfspath string) error {
 	nloops := 15
 	var success bool
 	for i := 0; i < nloops; i++ {
-		ep, err := util.ApiEndpoint(ipfspath)
+		ep, err := migrations.ApiEndpoint(ipfspath)
 		if err == nil {
 			stump.VLog("  - found api file: %s", ep)
 			endpoint = ep
@@ -192,7 +193,11 @@ func TestBinary(bin, version string) error {
 		return err
 	}
 
-	staging := filepath.Join(util.IpfsDir(), "update-staging")
+	ipfsDir, err := migrations.IpfsDir()
+	if err != nil {
+		return fmt.Errorf("cannot find ipfs directory: %s", err)
+	}
+	staging := filepath.Join(ipfsDir, "update-staging")
 	err = os.MkdirAll(staging, 0755)
 	if err != nil {
 		return fmt.Errorf("error creating test staging directory: %s", err)
@@ -296,7 +301,7 @@ func testFileAdd(tdir, bin string) error {
 	if runtime.GOOS == "windows" {
 		c.Env = os.Environ()
 	}
-	c.Env = util.ReplaceEnvVarIfExists(c.Env, "IPFS_PATH", tdir)
+	c.Env = replaceEnvVarIfExists(c.Env, "IPFS_PATH", tdir)
 	out, err := c.CombinedOutput()
 	if err != nil {
 		stump.Error("testfileadd fail: %s", err)
@@ -323,7 +328,7 @@ func testRefsList(tdir, bin string) error {
 	if runtime.GOOS == "windows" {
 		c.Env = os.Environ()
 	}
-	c.Env = util.ReplaceEnvVarIfExists(c.Env, "IPFS_PATH", tdir)
+	c.Env = replaceEnvVarIfExists(c.Env, "IPFS_PATH", tdir)
 	out, err := c.CombinedOutput()
 	if err != nil {
 		stump.Error("testfileadd fail: %s", err)
@@ -345,4 +350,15 @@ func testRefsList(tdir, bin string) error {
 	}
 
 	return nil
+}
+
+func replaceEnvVarIfExists(arr []string, ev string, val string) []string {
+	evLower := strings.ToLower(ev) + "="
+	for i := len(arr) - 1; i >= 0; i-- {
+		if strings.Index(strings.ToLower(arr[i]), evLower) == 0 {
+			arr = append(arr[:i], arr[i+1:]...)
+		}
+	}
+	arr = append(arr, ev+"="+val)
+	return arr
 }

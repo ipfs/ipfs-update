@@ -2,7 +2,7 @@ package util
 
 import (
 	"os"
-	"path/filepath"
+	"path"
 	"time"
 
 	"golang.org/x/sys/windows"
@@ -14,15 +14,15 @@ func init() {
 	InsideGUI = winInsideGUI
 }
 
-func winForceRemove(path string) error {
-	if _, err := os.Stat(path); err == nil {
-		if err = os.Remove(path); err != nil {
-			// fallback for when file is still in use (likely the daemon is up)
-			finalpath := filepath.Join(os.TempDir(), time.Now().Format("2006.01.02-15.04.05")+" "+filepath.Base(path))
-			if err = windows.MoveFileEx(windows.StringToUTF16Ptr(path), windows.StringToUTF16Ptr(finalpath), windows.MOVEFILE_COPY_ALLOWED); err != nil {
-				return err
-			}
-		}
+func winForceRemove(filePath string) error {
+	_, err := os.Stat(filePath)
+	if err != nil {
+		return nil
+	}
+	if err = os.Remove(filePath); err != nil {
+		// fallback for when file is still in use (likely the daemon is up)
+		finalpath := path.Join(os.TempDir(), time.Now().Format("2006.01.02-15.04.05")+" "+path.Base(filePath))
+		return windows.MoveFileEx(windows.StringToUTF16Ptr(filePath), windows.StringToUTF16Ptr(finalpath), windows.MOVEFILE_COPY_ALLOWED)
 	}
 	return nil
 }

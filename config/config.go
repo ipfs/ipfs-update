@@ -10,13 +10,3 @@ const CurrentVersionNumber = "1.6.1-dev"
 // It might not be currently available, but it might be later if we
 // add a Makefile and set it as a ldflag in the Makefile.
 var CurrentCommit string
-
-func GetUserAgent() string {
-	ua := CurrentAppName + "/" + CurrentVersionNumber
-
-	if CurrentCommit != "" {
-		ua += "-" + CurrentCommit
-	}
-
-	return ua
-}

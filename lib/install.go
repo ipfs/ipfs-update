@@ -1,9 +1,9 @@
 package lib
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -12,9 +12,10 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	test "github.com/ipfs/ipfs-update/test-dist"
-	util "github.com/ipfs/ipfs-update/util"
-	stump "github.com/whyrusleeping/stump"
+	"github.com/ipfs/ipfs-update/util"
+	"github.com/whyrusleeping/stump"
 )
 
 func (i *Install) getTmpPath() (string, error) {
@@ -28,62 +29,57 @@ func (i *Install) getTmpPath() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(tmpd, util.OsExeFileName("ipfs-new")), nil
+	return filepath.Join(tmpd, migrations.ExeName("ipfs-new")), nil
 }
 
-func NewInstall(root, target string, nocheck, downgrade bool) (*Install, error) {
+func NewInstall(target string, nocheck, downgrade bool) *Install {
 	return &Install{
-		TargetVers: target,
-		UrlRoot:    root,
-		NoCheck:    nocheck,
-		Downgrade:  downgrade,
-		BinaryName: util.OsExeFileName("ipfs"),
-	}, nil
+		targetVers: target,
+		noCheck:    nocheck,
+		downgrade:  downgrade,
+		binaryName: migrations.ExeName("ipfs"),
+	}
 }
 
 type Install struct {
 	// name of binary to be installed
-	BinaryName string
+	binaryName string
 
-	TargetVers  string
-	CurrentVers string
+	targetVers  string
+	currentVers string
 
-	TmpBinPath string
+	installPath     string
+	stashedFromPath string
+	tmpBinPath      string
 
-	StashedFromPath string
-
-	InstallPath string
-
-	NoCheck   bool
-	Downgrade bool
-
-	UrlRoot string
+	noCheck   bool
+	downgrade bool
 
 	// whether or not the install has succeeded
-	Succeeded bool
+	succeeded bool
 }
 
-func (i *Install) Run() error {
-	defer i.RevertOnFailure()
+func (i *Install) Run(ctx context.Context) error {
+	defer i.revertOnFailure()
 
 	var err error
-	i.CurrentVers, err = GetCurrentVersion()
+	i.currentVers, err = CurrentIpfsVersion()
 	if err != nil {
 		return err
 	}
 
-	if i.CurrentVers == "none" {
+	if i.currentVers == "none" {
 		stump.VLog("no pre-existing ipfs installation found")
-	} else if i.CurrentVers == i.TargetVers {
-		stump.Log("Already have version %s installed, skipping.", i.TargetVers)
-		i.Succeeded = true
+	} else if i.currentVers == i.targetVers {
+		stump.Log("Already have version %s installed, skipping.", i.targetVers)
+		i.succeeded = true
 		return nil
-	} else if !i.Downgrade {
-		semverCurrent, err := semver.ParseTolerant(i.CurrentVers)
+	} else if !i.downgrade {
+		semverCurrent, err := semver.ParseTolerant(i.currentVers)
 		if err != nil {
 			return err
 		}
-		semverTarget, err := semver.ParseTolerant(i.TargetVers)
+		semverTarget, err := semver.ParseTolerant(i.targetVers)
 		if err != nil {
 			return err
 		}
@@ -92,14 +88,14 @@ func (i *Install) Run() error {
 		}
 	}
 
-	err = i.DownloadNewBinary()
+	err = i.downloadNewBinary(ctx)
 	if err != nil {
 		return err
 	}
 
-	if !i.NoCheck {
+	if !i.noCheck {
 		stump.Log("binary downloaded, verifying...")
-		err = test.TestBinary(i.TmpBinPath, i.TargetVers)
+		err = test.TestBinary(i.tmpBinPath, i.targetVers)
 		if err != nil {
 			return err
 		}
@@ -107,18 +103,18 @@ func (i *Install) Run() error {
 		stump.Log("skipping tests since '--no-check' was passed")
 	}
 
-	err = i.MaybeStash()
+	err = i.maybeStash()
 	if err != nil {
 		return err
 	}
 
-	err = i.SelectGoodInstallLoc()
+	err = i.selectGoodInstallLoc()
 	if err != nil {
 		return err
 	}
 
-	stump.Log("installing new binary to %s", i.InstallPath)
-	err = InstallBinaryTo(i.TmpBinPath, i.InstallPath)
+	stump.Log("installing new binary to %s", i.installPath)
+	err = InstallBinaryTo(i.tmpBinPath, i.installPath)
 	if err != nil {
 		// in case of error here, replace old binary
 		stump.Error("Install failed: ", err)
@@ -126,42 +122,42 @@ func (i *Install) Run() error {
 		return err
 	}
 
-	err = i.postInstallMigrationCheck()
+	err = i.postInstallMigrationCheck(ctx)
 	if err != nil {
 		stump.Error("Migration Failed: ", err)
 		return err
 	}
 
-	i.Succeeded = true
+	i.succeeded = true
 	return nil
 }
 
-func (i *Install) RevertOnFailure() {
-	if i.Succeeded {
+func (i *Install) revertOnFailure() {
+	if i.succeeded {
 		return
 	}
 
 	stump.Log("install failed, reverting changes...")
 
-	if i.CurrentVers != "none" && i.InstallPath != "" {
-		revertOldBinary(i.InstallPath, i.CurrentVers)
+	if i.currentVers != "none" && i.installPath != "" {
+		revertOldBinary(i.installPath, i.currentVers)
 	}
 }
 
-func (i *Install) MaybeStash() error {
-	if i.CurrentVers != "none" {
+func (i *Install) maybeStash() error {
+	if i.currentVers != "none" {
 		stump.Log("stashing old binary")
-		oldpath, err := StashOldBinary(i.CurrentVers, false)
+		oldpath, err := StashOldBinary(i.currentVers, false)
 		if err != nil {
 			if strings.Contains(err.Error(), "could not find old") {
 				stump.Log("stash failed, no binary found.")
-				stump.Log(util.BoldText("this could be because you have a daemon running, but no ipfs binary in your path."))
+				stump.Log("** this could be because you have a daemon running, but no ipfs binary in your path. **")
 				stump.Log("continuing anyways, but skipping stash")
 				return nil
 			}
 			return err
 		}
-		i.StashedFromPath = filepath.Dir(oldpath)
+		i.stashedFromPath = filepath.Dir(oldpath)
 	} else {
 		stump.VLog("skipping stash, no previous install")
 	}
@@ -169,14 +165,14 @@ func (i *Install) MaybeStash() error {
 	return nil
 }
 
-func (i *Install) postInstallMigrationCheck() error {
-	if util.BeforeVersion("v0.3.10", i.TargetVers) {
+func (i *Install) postInstallMigrationCheck(ctx context.Context) error {
+	if util.BeforeVersion("v0.3.10", i.targetVers) {
 		stump.VLog("  - ipfs pre v0.3.10 does not support checking of repo version through the tool")
 		stump.VLog("  - if a migration is needed, you will be prompted when starting ipfs")
 		return nil
 	}
 
-	return CheckMigration()
+	return CheckMigration(ctx)
 }
 
 func InstallBinaryTo(nbin, nloc string) error {
@@ -196,7 +192,7 @@ func InstallBinaryTo(nbin, nloc string) error {
 // StashOldBinary moves the existing ipfs binary to a backup directory
 // and returns the path to the original location of the old binary
 func StashOldBinary(tag string, keep bool) (string, error) {
-	loc, err := exec.LookPath(util.OsExeFileName("ipfs"))
+	loc, err := exec.LookPath(migrations.ExeName("ipfs"))
 	if err != nil {
 		return "", fmt.Errorf("could not find old binary: %s", err)
 	}
@@ -205,7 +201,10 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 		return "", fmt.Errorf("could not determine absolute path for old binary: %s", err)
 	}
 
-	ipfsdir := util.IpfsDir()
+	ipfsdir, err := migrations.IpfsDir()
+	if err != nil {
+		return "", err
+	}
 
 	olddir := filepath.Join(ipfsdir, "old-bin")
 	npath := filepath.Join(olddir, "ipfs-"+tag)
@@ -236,65 +235,27 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 	return loc, nil
 }
 
-func (i *Install) DownloadNewBinary() error {
+func (i *Install) downloadNewBinary(ctx context.Context) error {
 	out, err := i.getTmpPath()
 	if err != nil {
 		return err
 	}
 
-	err = GetBinaryForVersion("go-ipfs", "ipfs", i.UrlRoot, i.TargetVers, out)
+	distname := "go-ipfs"
+	stump.Log("fetching %s version %s", distname, i.targetVers)
+
+	i.tmpBinPath, err = migrations.FetchBinary(ctx, distname, i.targetVers, distname, "ipfs", out)
 	if err != nil {
 		return fmt.Errorf("failed to get ipfs binary: %s", err)
 	}
 
-	i.TmpBinPath = out
 	return nil
 }
 
-func GetBinaryForVersion(distname, binnom, root, vers, out string) error {
-	stump.Log("fetching %s version %s", distname, vers)
-	dir, err := ioutil.TempDir("", "ipfs-update")
-	if err != nil {
-		return err
-	}
-
-	stump.VLog("  - using GOOS=%s and GOARCH=%s", runtime.GOOS, runtime.GOARCH)
-	var archive string
-	switch runtime.GOOS {
-	case "windows":
-		archive = "zip"
-	default:
-		archive = "tar.gz"
-	}
-	finame := fmt.Sprintf("%s_%s_%s-%s.%s", distname, vers, runtime.GOOS, runtime.GOARCH, archive)
-
-	distpath := fmt.Sprintf("%s/%s/%s/%s", root, distname, vers, finame)
-
-	data, err := util.Fetch(distpath)
-	if err != nil {
-		return err
-	}
-
-	arcpath := filepath.Join(dir, finame)
-	fi, err := os.Create(arcpath)
-	if err != nil {
-		return err
-	}
-
-	stump.VLog("  - writing to", arcpath)
-	_, err = io.Copy(fi, data)
-	if err != nil {
-		return err
-	}
-	fi.Close()
-
-	return unpackArchive(distname, binnom, arcpath, out, archive)
-}
-
-func (i *Install) SelectGoodInstallLoc() error {
+func (i *Install) selectGoodInstallLoc() error {
 	var installDir string
-	if i.StashedFromPath != "" {
-		installDir = i.StashedFromPath
+	if i.stashedFromPath != "" {
+		installDir = i.stashedFromPath
 	} else {
 		d, err := findGoodInstallDir()
 		if err != nil {
@@ -304,7 +265,7 @@ func (i *Install) SelectGoodInstallLoc() error {
 		installDir = d
 	}
 
-	i.InstallPath = filepath.Join(installDir, i.BinaryName)
+	i.installPath = filepath.Join(installDir, i.binaryName)
 	return nil
 }
 
