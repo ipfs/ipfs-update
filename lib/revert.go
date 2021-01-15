@@ -16,7 +16,7 @@ import (
 )
 
 func revertOldBinary(oldpath, version string) {
-	ipfsDir, err := migrations.IpfsDir()
+	ipfsDir, err := migrations.CheckIpfsDir("")
 	if err != nil {
 		stump.Log("Error reverting")
 		stump.Log("failed to replace binary after install fail")
@@ -36,7 +36,7 @@ func revertOldBinary(oldpath, version string) {
 }
 
 func SelectRevertBin() (string, error) {
-	ipfsDir, err := migrations.IpfsDir()
+	ipfsDir, err := migrations.CheckIpfsDir("")
 	if err != nil {
 		return "", err
 	}

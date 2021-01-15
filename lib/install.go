@@ -201,7 +201,7 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 		return "", fmt.Errorf("could not determine absolute path for old binary: %s", err)
 	}
 
-	ipfsdir, err := migrations.IpfsDir()
+	ipfsdir, err := migrations.CheckIpfsDir("")
 	if err != nil {
 		return "", err
 	}

@@ -148,7 +148,7 @@ var cmdInstall = &cli.Command{
 		i := lib.NewInstall(vers, c.Bool("no-check"), c.Bool("allow-downgrade"))
 		err := i.Run(c.Context)
 		if err != nil {
-			return err
+			return fmt.Errorf("install failed: %s", err)
 		}
 		stump.Log("\nInstallation complete!")
 
@@ -212,7 +212,7 @@ var cmdRevert = &cli.Command{
 		}
 
 		stump.Log("Reverting to %s", oldbinpath)
-		ipfsDir, err := migrations.IpfsDir()
+		ipfsDir, err := migrations.IpfsDir("")
 		if err != nil {
 			stump.Fatal("could not find ipfs directory:", err)
 		}

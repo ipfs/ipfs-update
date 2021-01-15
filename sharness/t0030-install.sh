@@ -6,6 +6,9 @@ test_description="ipfs-update install"
 
 GUEST_IPFS_UPDATE="sharness/bin/ipfs-update"
 
+# TODO: remove this when migrations are availabe one the distributions site
+IPFS_DIST_PATH="/ipfs/QmXt92hFRuvQgFhgHoaMxC4wLFcvKsCywQPTNmPYCGfEV4"
+
 test_expect_success "start a docker container" '
 	DOCID=$(start_docker)
 '
@@ -29,7 +32,7 @@ test_expect_success "'ipfs-update version' output looks good" '
 '
 
 test_expect_success "'ipfs-update install' works when something is installed" '
-	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install v0.4.23" >actual 2>&1 ||
+	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --distpath $IPFS_DIST_PATH --verbose install v0.4.23" >actual 2>&1 ||
 	test_fsh cat actual
 '
 
@@ -39,7 +42,7 @@ test_expect_success  "'ipfs-update install' fails when downgrading without the d
 '
 
 test_expect_success "'ipfs-update install' works when downgrading with flag" '
-	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install --allow-downgrade v0.3.8" >actual 2>&1 ||
+	exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --distpath $IPFS_DIST_PATH --verbose install --allow-downgrade v0.3.8" >actual 2>&1 ||
 	test_fsh cat actual
 '
 

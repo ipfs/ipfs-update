@@ -193,7 +193,7 @@ func TestBinary(bin, version string) error {
 		return err
 	}
 
-	ipfsDir, err := migrations.IpfsDir()
+	ipfsDir, err := migrations.IpfsDir("")
 	if err != nil {
 		return fmt.Errorf("cannot find ipfs directory: %s", err)
 	}
