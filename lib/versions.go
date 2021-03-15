@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
-
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 )
 
 // CurrentIpfsVersion returns the version of the currently running or installed
 // ipfs executable.
 func CurrentIpfsVersion() (string, error) {
 	// try checking a locally running daemon first
-	_, ver, err := migrations.ApiShell("")
+	_, ver, err := ApiShell("")
 	if err != nil {
 		_, err = exec.LookPath("ipfs")
 		if err != nil {

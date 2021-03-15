@@ -61,9 +61,6 @@ Otherwise you can close this window.`, exeName, windowsHelpURL)
 
 	app.Before = func(c *cli.Context) error {
 		stump.Verbose = c.Bool("verbose")
-		if distp := c.String("distpath"); distp != "" {
-			migrations.SetIpfsDistPath(distp)
-		}
 		return nil
 	}
 
@@ -89,7 +86,8 @@ var cmdVersions = &cli.Command{
 	Usage:     "Print out all available versions.",
 	ArgsUsage: " ",
 	Action: func(c *cli.Context) error {
-		vs, err := migrations.DistVersions(c.Context, "go-ipfs", true)
+		fetcher := createFetcher(c)
+		vs, err := migrations.DistVersions(c.Context, fetcher, "go-ipfs", true)
 		if err != nil {
 			stump.Fatal("failed to query versions:", err)
 		}
@@ -119,7 +117,7 @@ var cmdVersion = &cli.Command{
 var cmdInstall = &cli.Command{
 	Name:      "install",
 	Usage:     "Install a version of ipfs.",
-	ArgsUsage: "A version or \"latest\" for latest version",
+	ArgsUsage: "A version or \"latest\" or \"latest-stable\" for latest version",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:  "no-check",
@@ -135,8 +133,12 @@ var cmdInstall = &cli.Command{
 		if vers == "" {
 			stump.Fatal("please specify a version to install")
 		}
-		if vers == "latest" {
-			latest, err := migrations.LatestDistVersion(c.Context, "go-ipfs")
+
+		fetcher := createFetcher(c)
+
+		if vers == "latest" || vers == "latest-stable" {
+			stable := vers == "latest-stable"
+			latest, err := migrations.LatestDistVersion(c.Context, fetcher, "go-ipfs", stable)
 			if err != nil {
 				stump.Fatal("error resolving 'latest':", err)
 			}
@@ -145,14 +147,14 @@ var cmdInstall = &cli.Command{
 
 		vers = checkVersionFormat(vers)
 
-		i := lib.NewInstall(vers, c.Bool("no-check"), c.Bool("allow-downgrade"))
+		i := lib.NewInstall(vers, c.Bool("no-check"), c.Bool("allow-downgrade"), fetcher)
 		err := i.Run(c.Context)
 		if err != nil {
 			return fmt.Errorf("install failed: %s", err)
 		}
 		stump.Log("\nInstallation complete!")
 
-		_, _, err = migrations.ApiShell("")
+		_, _, err = lib.ApiShell("")
 		if err == nil {
 			stump.Log("Remember to restart your daemon before continuing.")
 		}
@@ -235,7 +237,7 @@ var cmdRevert = &cli.Command{
 
 var cmdFetch = &cli.Command{
 	Name:      "fetch",
-	Usage:     "Fetch a given version of ipfs. Default: latest.",
+	Usage:     "Fetch a given version of ipfs, or \"latest\" or \"latest-stable\". Default: latest.",
 	ArgsUsage: "<version>",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
@@ -244,10 +246,18 @@ var cmdFetch = &cli.Command{
 		},
 	},
 	Action: func(c *cli.Context) error {
+		fetcher := createFetcher(c)
+
 		vers := c.Args().First()
-		if vers == "" || vers == "latest" {
-			stump.VLog("looking up 'latest'")
-			latest, err := migrations.LatestDistVersion(c.Context, "go-ipfs")
+		if vers == "" || vers == "latest" || vers == "latest-stable" {
+			var stable bool
+			if vers == "latest-stable" {
+				stump.VLog("looking up 'latest-stable'")
+				stable = true
+			} else {
+				stump.VLog("looking up 'latest'")
+			}
+			latest, err := migrations.LatestDistVersion(c.Context, fetcher, "go-ipfs", stable)
 			if err != nil {
 				stump.Fatal("error querying latest version:", err)
 			}
@@ -265,7 +275,7 @@ var cmdFetch = &cli.Command{
 
 		stump.Log("fetching go-ipfs version", vers)
 
-		output, err = migrations.FetchBinary(c.Context, "go-ipfs", vers, "go-ipfs", "ipfs", output)
+		output, err = migrations.FetchBinary(c.Context, fetcher, "go-ipfs", vers, "ipfs", output)
 		if err != nil {
 			stump.Fatal("failed to fetch binary:", err)
 		}
@@ -293,4 +303,16 @@ func looksLikeSemver(v string) bool {
 	}
 
 	return false
+}
+
+func createFetcher(c *cli.Context) migrations.Fetcher {
+	fetcher := migrations.NewMultiFetcher(lib.NewIpfsFetcher(), migrations.NewHttpFetcher())
+
+	if distp := c.String("distpath"); distp != "" {
+		fetcher.SetDistPath(distp)
+	} else {
+		fetcher.SetDistPath(migrations.GetDistPathEnv(""))
+	}
+
+	return fetcher
 }

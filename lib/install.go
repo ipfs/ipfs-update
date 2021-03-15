@@ -32,12 +32,13 @@ func (i *Install) getTmpPath() (string, error) {
 	return filepath.Join(tmpd, migrations.ExeName("ipfs-new")), nil
 }
 
-func NewInstall(target string, nocheck, downgrade bool) *Install {
+func NewInstall(target string, nocheck, downgrade bool, fetcher migrations.Fetcher) *Install {
 	return &Install{
 		targetVers: target,
 		noCheck:    nocheck,
 		downgrade:  downgrade,
 		binaryName: migrations.ExeName("ipfs"),
+		fetcher:    fetcher,
 	}
 }
 
@@ -57,6 +58,8 @@ type Install struct {
 
 	// whether or not the install has succeeded
 	succeeded bool
+
+	fetcher migrations.Fetcher
 }
 
 func (i *Install) Run(ctx context.Context) error {
@@ -172,7 +175,7 @@ func (i *Install) postInstallMigrationCheck(ctx context.Context) error {
 		return nil
 	}
 
-	return CheckMigration(ctx)
+	return CheckMigration(ctx, i.fetcher)
 }
 
 func InstallBinaryTo(nbin, nloc string) error {
@@ -244,7 +247,7 @@ func (i *Install) downloadNewBinary(ctx context.Context) error {
 	distname := "go-ipfs"
 	stump.Log("fetching %s version %s", distname, i.targetVers)
 
-	i.tmpBinPath, err = migrations.FetchBinary(ctx, distname, i.targetVers, distname, "ipfs", out)
+	i.tmpBinPath, err = migrations.FetchBinary(ctx, i.fetcher, distname, i.targetVers, "ipfs", out)
 	if err != nil {
 		return fmt.Errorf("failed to get ipfs binary: %s", err)
 	}

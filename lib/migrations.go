@@ -8,7 +8,7 @@ import (
 	"github.com/whyrusleeping/stump"
 )
 
-func CheckMigration(ctx context.Context) error {
+func CheckMigration(ctx context.Context, fetcher migrations.Fetcher) error {
 	stump.Log("checking if repo migration is needed...")
 
 	oldVer, err := migrations.RepoVersion("")
@@ -33,7 +33,7 @@ func CheckMigration(ctx context.Context) error {
 
 	if oldVer != newVer {
 		stump.Log("  check complete, migration required.")
-		return migrations.RunMigration(ctx, newVer, "")
+		return migrations.RunMigration(ctx, fetcher, newVer, "", true)
 	}
 
 	stump.VLog("  check complete, no migration required.")
