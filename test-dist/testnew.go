@@ -101,7 +101,7 @@ func tweakConfig(ipfspath string) error {
 	return nil
 }
 
-func StartDaemon(p, bin string) (io.Closer, error) {
+func startDaemon(p, bin string) (io.Closer, error) {
 	cmd := exec.Command(bin, "daemon", "--debug")
 
 	stdout, err := os.Create(filepath.Join(p, "daemon.stdout"))
@@ -147,7 +147,7 @@ func waitForApi(ipfspath string) error {
 	nloops := 15
 	var success bool
 	for i := 0; i < nloops; i++ {
-		ep, err := migrations.ApiEndpoint(ipfspath)
+		ep, err := util.ApiEndpoint(ipfspath)
 		if err == nil {
 			stump.VLog("  - found api file: %s", ep)
 			endpoint = ep
@@ -251,7 +251,7 @@ func TestBinary(bin, version string) error {
 	}
 
 	stump.VLog("  - starting up daemon")
-	daemon, err := StartDaemon(tdir, bin)
+	daemon, err := startDaemon(tdir, bin)
 	if err != nil {
 		return fmt.Errorf("error starting daemon: %s", err)
 	}

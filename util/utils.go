@@ -3,11 +3,18 @@ package util
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+	"path"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 )
+
+// Local IPFS API
+const apiFile = "api"
 
 var (
 	// forceRemove tries to remove a file, even if it's in-use. On windows,
@@ -75,4 +82,27 @@ func BeforeVersion(check, cur string) bool {
 		}
 	}
 	return false
+}
+
+// ApiEndpoint reads the api file from the local ipfs install directory and
+// returns the address:port read from the file.  If the ipfs directory is not
+// specified then the default location is used.
+func ApiEndpoint(ipfsDir string) (string, error) {
+	ipfsDir, err := migrations.CheckIpfsDir(ipfsDir)
+	if err != nil {
+		return "", err
+	}
+
+	apiData, err := ioutil.ReadFile(path.Join(ipfsDir, apiFile))
+	if err != nil {
+		return "", err
+	}
+
+	val := strings.TrimSpace(string(apiData))
+	parts := strings.Split(val, "/")
+	if len(parts) != 5 {
+		return "", fmt.Errorf("incorrectly formatted api string: %q", val)
+	}
+
+	return parts[2] + ":" + parts[4], nil
 }

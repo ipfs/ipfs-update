@@ -2,13 +2,17 @@ package lib
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"os/exec"
+	"strconv"
+	"strings"
 
 	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	"github.com/whyrusleeping/stump"
 )
 
-func CheckMigration(ctx context.Context, fetcher migrations.Fetcher) error {
+func checkMigration(ctx context.Context, fetcher migrations.Fetcher, binPath string) error {
 	stump.Log("checking if repo migration is needed...")
 
 	oldVer, err := migrations.RepoVersion("")
@@ -19,7 +23,7 @@ func CheckMigration(ctx context.Context, fetcher migrations.Fetcher) error {
 
 	stump.VLog("  - old repo version is %d", oldVer)
 
-	newVer, err := migrations.IpfsRepoVersion(ctx)
+	newVer, err := ipfsRepoVersion(ctx, binPath)
 	if err != nil {
 		stump.Log("Failed to check new binary repo version.")
 		stump.VLog("Reason: ", err)
@@ -38,4 +42,20 @@ func CheckMigration(ctx context.Context, fetcher migrations.Fetcher) error {
 
 	stump.VLog("  check complete, no migration required.")
 	return nil
+}
+
+// ipfsRepoVersion returns the repo version required by the ipfs daemon
+func ipfsRepoVersion(ctx context.Context, binPath string) (int, error) {
+	out, err := exec.CommandContext(ctx, binPath, "version", "--repo").CombinedOutput()
+	if err != nil {
+		return 0, fmt.Errorf("%s: %s", err, string(out))
+	}
+
+	verStr := strings.TrimSpace(string(out))
+	ver, err := strconv.Atoi(verStr)
+	if err != nil {
+		return 0, fmt.Errorf("repo version is not an integer: %s", verStr)
+	}
+
+	return ver, nil
 }

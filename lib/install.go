@@ -175,7 +175,7 @@ func (i *Install) postInstallMigrationCheck(ctx context.Context) error {
 		return nil
 	}
 
-	return CheckMigration(ctx, i.fetcher)
+	return checkMigration(ctx, i.fetcher, i.installPath)
 }
 
 func InstallBinaryTo(nbin, nloc string) error {

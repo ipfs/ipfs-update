@@ -306,13 +306,14 @@ func looksLikeSemver(v string) bool {
 }
 
 func createFetcher(c *cli.Context) migrations.Fetcher {
-	fetcher := migrations.NewMultiFetcher(lib.NewIpfsFetcher(), migrations.NewHttpFetcher())
+	const userAgent = "ipfs-update"
 
-	if distp := c.String("distpath"); distp != "" {
-		fetcher.SetDistPath(distp)
-	} else {
-		fetcher.SetDistPath(migrations.GetDistPathEnv(""))
+	distPath := c.String("distpath")
+	if distPath == "" {
+		distPath = migrations.GetDistPathEnv("")
 	}
 
-	return fetcher
+	return migrations.NewMultiFetcher(
+		lib.NewIpfsFetcher(distPath, 0),
+		migrations.NewHttpFetcher(distPath, "", userAgent, 0))
 }
