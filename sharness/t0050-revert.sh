@@ -5,8 +5,8 @@ test_description="ipfs-update revert"
 . lib/test-lib.sh
 
 GUEST_IPFS_UPDATE="sharness/bin/ipfs-update"
-# TODO: remove this when migrations are availabe one the distributions site
-IPFS_DIST_PATH="/ipfs/QmdqMERfkEMkkeWcaAWrr7ycnMW637JgtL4LZ4BKM1mRBi"
+# TODO: remove this when migrations are availabe on the distributions site
+IPFS_DIST_PATH="/ipfs/QmZqzacg5Q8WpDL7SymogoaSZYw6RZT2kgPavymCmMwWse"
 
 test_expect_success "start a docker container" '
 	DOCID=$(start_docker)
