@@ -7,7 +7,7 @@ test_description="ipfs-update install"
 GUEST_IPFS_UPDATE="sharness/bin/ipfs-update"
 
 # TODO: remove this when migrations are availabe on the distributions site
-IPFS_DIST_PATH="/ipfs/QmZqzacg5Q8WpDL7SymogoaSZYw6RZT2kgPavymCmMwWse"
+IPFS_DIST_PATH="/ipfs/QmWLyhqWDsWbcWE8vjmHkzGKLGgvHh84cLxM3ceLsojwrx"
 
 test_expect_success "start a docker container" '
 	DOCID=$(start_docker)
