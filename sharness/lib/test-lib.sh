@@ -58,7 +58,7 @@ test_install_version() {
 	VERSION="$1"
 
 	test_expect_success "'ipfs-update install' works for $VERSION" '
-		exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --distpath $IPFS_DIST_PATH --verbose install --allow-downgrade $VERSION" >actual 2>&1 ||
+		exec_docker "$DOCID" "$GUEST_IPFS_UPDATE --verbose install --allow-downgrade $VERSION" >actual 2>&1 ||
 		test_fsh cat actual
 	'
 
