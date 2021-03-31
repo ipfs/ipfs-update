@@ -117,7 +117,7 @@ var cmdVersion = &cli.Command{
 var cmdInstall = &cli.Command{
 	Name:      "install",
 	Usage:     "Install a version of ipfs.",
-	ArgsUsage: "A version or \"latest\" for latest stable version or \"beta\" for latest or RC",
+	ArgsUsage: "A version or \"latest\" for the latest stable version or \"beta\" for the latest stable or RC version",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:  "no-check",
@@ -237,7 +237,7 @@ var cmdRevert = &cli.Command{
 
 var cmdFetch = &cli.Command{
 	Name:      "fetch",
-	Usage:     "Fetch a given version of ipfs, or \"latest\" for latest stable or \"beta\" for latest or RC. Default: latest.",
+	Usage:     "Fetch a given version of ipfs, or \"latest\" for the latest stable version or \"beta\" for the latest stable or RC version. Default: latest.",
 	ArgsUsage: "<version>",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
