@@ -117,7 +117,7 @@ var cmdVersion = &cli.Command{
 var cmdInstall = &cli.Command{
 	Name:      "install",
 	Usage:     "Install a version of ipfs.",
-	ArgsUsage: "A version or \"latest\" or \"latest-stable\" for latest version",
+	ArgsUsage: "A version or \"latest\" for latest stable version or \"beta\" for latest or RC",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:  "no-check",
@@ -136,11 +136,11 @@ var cmdInstall = &cli.Command{
 
 		fetcher := createFetcher(c)
 
-		if vers == "latest" || vers == "latest-stable" {
-			stable := vers == "latest-stable"
+		if vers == "latest" || vers == "beta" {
+			stable := vers == "latest"
 			latest, err := migrations.LatestDistVersion(c.Context, fetcher, "go-ipfs", stable)
 			if err != nil {
-				stump.Fatal("error resolving 'latest':", err)
+				stump.Fatal("error resolving %q: %s", vers, err)
 			}
 			vers = latest
 		}
@@ -237,7 +237,7 @@ var cmdRevert = &cli.Command{
 
 var cmdFetch = &cli.Command{
 	Name:      "fetch",
-	Usage:     "Fetch a given version of ipfs, or \"latest\" or \"latest-stable\". Default: latest.",
+	Usage:     "Fetch a given version of ipfs, or \"latest\" for latest stable or \"beta\" for latest or RC. Default: latest.",
 	ArgsUsage: "<version>",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
@@ -249,17 +249,18 @@ var cmdFetch = &cli.Command{
 		fetcher := createFetcher(c)
 
 		vers := c.Args().First()
-		if vers == "" || vers == "latest" || vers == "latest-stable" {
+		if vers == "" || vers == "latest" || vers == "beta" {
 			var stable bool
-			if vers == "latest-stable" {
-				stump.VLog("looking up 'latest-stable'")
-				stable = true
+			if vers == "beta" {
+				stump.VLog("looking up 'beta'")
 			} else {
+				vers = "latest"
 				stump.VLog("looking up 'latest'")
+				stable = true
 			}
 			latest, err := migrations.LatestDistVersion(c.Context, fetcher, "go-ipfs", stable)
 			if err != nil {
-				stump.Fatal("error querying latest version:", err)
+				stump.Fatal("error querying %q version: %s", vers, err)
 			}
 
 			vers = latest
