@@ -10,25 +10,38 @@ import (
 	"text/tabwriter"
 	"time"
 
-	util "github.com/ipfs/ipfs-update/util"
-	stump "github.com/whyrusleeping/stump"
+	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
+	"github.com/ipfs/ipfs-update/util"
+	"github.com/whyrusleeping/stump"
 )
 
 func revertOldBinary(oldpath, version string) {
-	stashpath := filepath.Join(util.IpfsDir(), "old-bin", "ipfs-"+version)
-	rnerr := util.Move(stashpath, oldpath)
-	if rnerr != nil {
+	ipfsDir, err := migrations.CheckIpfsDir("")
+	if err != nil {
 		stump.Log("Error reverting")
-		stump.Log("failed to replace binary after install fail: ", rnerr)
+		stump.Log("failed to replace binary after install fail")
+		stump.Log("could not find location of old binary:", err)
+		return
+	}
+
+	stashpath := filepath.Join(ipfsDir, "old-bin", "ipfs-"+version)
+	err = util.Move(stashpath, oldpath)
+	if err != nil {
+		stump.Log("Error reverting")
+		stump.Log("failed to replace binary after install fail:", err)
 		stump.Log("sorry :(")
-		stump.Log("your old ipfs binary should still be located at: ", stashpath)
+		stump.Log("your old ipfs binary should still be located at:", stashpath)
 		stump.Log("try: `mv %q %q`", stashpath, oldpath)
 	}
 }
 
 func SelectRevertBin() (string, error) {
-	oldbinpath := filepath.Join(util.IpfsDir(), "old-bin")
-	_, err := os.Stat(oldbinpath)
+	ipfsDir, err := migrations.CheckIpfsDir("")
+	if err != nil {
+		return "", err
+	}
+	oldbinpath := filepath.Join(ipfsDir, "old-bin")
+	_, err = os.Stat(oldbinpath)
 	if os.IsNotExist(err) {
 		return "", fmt.Errorf("No prior binary found at: %s", oldbinpath)
 	}
