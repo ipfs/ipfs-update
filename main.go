@@ -276,7 +276,7 @@ var cmdFetch = &cli.Command{
 
 		stump.Log("fetching go-ipfs version", vers)
 
-		output, err = migrations.FetchBinary(c.Context, fetcher, "go-ipfs", vers, "ipfs", output)
+		_, err = migrations.FetchBinary(c.Context, fetcher, "go-ipfs", vers, "ipfs", output)
 		if err != nil {
 			stump.Fatal("failed to fetch binary:", err)
 		}

@@ -93,7 +93,7 @@ func tweakConfig(ipfspath string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(cfgpath, out, 0644)
+	err = ioutil.WriteFile(cfgpath, out, 0o644)
 	if err != nil {
 		return fmt.Errorf("error writing tweaked config: %s", err)
 	}
@@ -188,7 +188,7 @@ func TestBinary(bin, version string) error {
 	}
 
 	// make sure binary is executable
-	err = os.Chmod(bin, 0755)
+	err = os.Chmod(bin, 0o755)
 	if err != nil {
 		return err
 	}
@@ -198,7 +198,7 @@ func TestBinary(bin, version string) error {
 		return fmt.Errorf("cannot find ipfs directory: %s", err)
 	}
 	staging := filepath.Join(ipfsDir, "update-staging")
-	err = os.MkdirAll(staging, 0755)
+	err = os.MkdirAll(staging, 0o755)
 	if err != nil {
 		return fmt.Errorf("error creating test staging directory: %s", err)
 	}
@@ -208,7 +208,7 @@ func TestBinary(bin, version string) error {
 		return err
 	}
 
-	err = os.MkdirAll(tdir, 0755)
+	err = os.MkdirAll(tdir, 0o755)
 	if err != nil {
 		return fmt.Errorf("error creating test staging directory: %s", err)
 	}
@@ -292,7 +292,7 @@ func testFileAdd(tdir, bin string) error {
 	stump.VLog("  - checking that we can add and cat a file")
 	text := []byte("hello world! This node should work")
 	testFile := filepath.Join(tdir, "/test.txt")
-	err := ioutil.WriteFile(testFile, text, 0644)
+	err := ioutil.WriteFile(testFile, text, 0o644)
 	if err != nil {
 		stump.Error("testfileadd could not create test file: %s", err)
 	}
@@ -346,7 +346,7 @@ func testRefsList(tdir, bin string) error {
 		}
 	}
 	if !found {
-		return fmt.Errorf("expected to see %s in the local refs!", exp)
+		return fmt.Errorf("expected to see %s in the local refs", exp)
 	}
 
 	return nil

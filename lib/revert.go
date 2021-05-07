@@ -43,7 +43,7 @@ func SelectRevertBin() (string, error) {
 	oldbinpath := filepath.Join(ipfsDir, "old-bin")
 	_, err = os.Stat(oldbinpath)
 	if os.IsNotExist(err) {
-		return "", fmt.Errorf("No prior binary found at: %s", oldbinpath)
+		return "", fmt.Errorf("no prior binary found at: %s", oldbinpath)
 	}
 
 	entries, err := ioutil.ReadDir(oldbinpath)

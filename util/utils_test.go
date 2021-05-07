@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-
 	"testing"
 )
 
@@ -15,7 +14,9 @@ func TestApiEndpoint(t *testing.T) {
 	}
 	defer os.RemoveAll(fakeHome)
 	defer os.Unsetenv("HOME")
+	defer os.Unsetenv("IPFS_PATH")
 
+	os.Setenv("IPFS_PATH", "")
 	os.Setenv("HOME", fakeHome)
 	fakeIpfs := path.Join(fakeHome, ".ipfs")
 
@@ -30,7 +31,7 @@ func TestApiEndpoint(t *testing.T) {
 	}
 
 	apiPath := path.Join(fakeIpfs, apiFile)
-	err = ioutil.WriteFile(apiPath, []byte("bad-data"), 0644)
+	err = ioutil.WriteFile(apiPath, []byte("bad-data"), 0o644)
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +41,7 @@ func TestApiEndpoint(t *testing.T) {
 		t.Fatal("expected error when bad data")
 	}
 
-	err = ioutil.WriteFile(apiPath, []byte("/ip4/127.0.0.1/tcp/5001"), 0644)
+	err = ioutil.WriteFile(apiPath, []byte("/ip4/127.0.0.1/tcp/5001"), 0o644)
 	if err != nil {
 		panic(err)
 	}
