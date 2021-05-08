@@ -127,6 +127,11 @@ var cmdInstall = &cli.Command{
 			Name:  "allow-downgrade",
 			Usage: "Allow downgrading. WARNING: Downgrades may require running reverse migrations.",
 		},
+		&cli.IntFlag{
+			Name:  "retries",
+			Usage: "Amount of times to retry upon failing to fetch or install the specified version.",
+			Value: 1,
+		},
 	},
 	Action: func(c *cli.Context) error {
 		vers := c.Args().First()
@@ -139,8 +144,16 @@ var cmdInstall = &cli.Command{
 		if vers == "latest" || vers == "beta" {
 			stable := vers == "latest"
 			latest, err := migrations.LatestDistVersion(c.Context, fetcher, "go-ipfs", stable)
-			if err != nil {
-				stump.Fatal("error resolving %q: %s", vers, err)
+			for i := c.Int("retries"); i > 0; i-- {
+				if err == nil {
+					break
+				}
+				if i > 1 { // On the last attempt we want a failed attempt to be logged as fatal
+					stump.Error("error resolving %q: %s", vers, err)
+				} else {
+					stump.Fatal("error resolving %q: %s", vers, err)
+				}
+				latest, err = migrations.LatestDistVersion(c.Context, fetcher, "go-ipfs", stable)
 			}
 			vers = latest
 		}
@@ -149,6 +162,12 @@ var cmdInstall = &cli.Command{
 
 		i := lib.NewInstall(vers, c.Bool("no-check"), c.Bool("allow-downgrade"), fetcher)
 		err := i.Run(c.Context)
+		for retries := c.Int("retries"); retries > 0; retries-- {
+			if err == nil {
+				break
+			}
+			err = i.Run(c.Context)
+		}
 		if err != nil {
 			return fmt.Errorf("install failed: %s", err)
 		}
