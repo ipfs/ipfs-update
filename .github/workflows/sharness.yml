@@ -1,0 +1,20 @@
+on: [push, pull_request]
+
+jobs:
+  sharness:
+    strategy:
+      fail-fast: false
+      matrix:
+        go: [ "1.15.x", "1.16.x" ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Go information
+        run: |
+          go version
+          go env
+      - name: run sharness tests
+        run: cd sharness && make
