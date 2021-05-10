@@ -24,7 +24,7 @@ func (i *Install) getTmpPath() (string, error) {
 		return "", err
 	}
 
-	err = os.MkdirAll(tmpd, 0777)
+	err = os.MkdirAll(tmpd, 0o777)
 	if err != nil {
 		return "", err
 	}
@@ -184,7 +184,7 @@ func InstallBinaryTo(nbin, nloc string) error {
 		return fmt.Errorf("error moving new binary into place: %s", err)
 	}
 
-	err = os.Chmod(nloc, 0755)
+	err = os.Chmod(nloc, 0o755)
 	if err != nil {
 		return fmt.Errorf("error setting permissions on new binary: %s", err)
 	}
@@ -213,13 +213,13 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 	npath := filepath.Join(olddir, "ipfs-"+tag)
 	pathpath := filepath.Join(olddir, "path-old")
 
-	err = os.MkdirAll(olddir, 0700)
+	err = os.MkdirAll(olddir, 0o700)
 	if err != nil {
 		return "", fmt.Errorf("could not create dir to backup old binary: %s", err)
 	}
 
 	// write the old path of the binary to the backup dir
-	err = ioutil.WriteFile(pathpath, []byte(loc), 0644)
+	err = ioutil.WriteFile(pathpath, []byte(loc), 0o644)
 	if err != nil {
 		return "", fmt.Errorf("could not stash path: %s", err)
 	}

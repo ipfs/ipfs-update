@@ -26,6 +26,7 @@ func winForceRemove(filePath string) error {
 	}
 	return nil
 }
+
 func winInsideGUI() bool {
 	conhostInfo := &windows.ConsoleScreenBufferInfo{}
 	if err := windows.GetConsoleScreenBufferInfo(windows.Stdout, conhostInfo); err != nil {
