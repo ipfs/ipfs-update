@@ -89,3 +89,7 @@ func ApiShell(ipfsDir string) (*api.Shell, string, error) {
 	sh.SetTimeout(0)
 	return sh, ver, nil
 }
+
+func (f *IpfsFetcher) Close() error {
+	return nil
+}
