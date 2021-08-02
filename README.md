@@ -104,6 +104,16 @@ algorithm:
 
 [go-env]: https://golang.org/cmd/go/#hdr-Environment_variables
 
+## Custom IPFS gateway URL
+
+By default, `ipfs-update` uses https://ipfs.io as the gateway URL. If you wish to use your own IPFS gateway URL, please export it via the environment variable `IPFS_CUSTOM_GATEWAY_URL`.
+
+For example:
+
+```sh
+$ IPFS_GATEWAY="https://dweb.link" ipfs-update install latest
+```
+
 ## Contribute
 
 Feel free to join in. All welcome. Open an [issue](https://github.com/ipfs/ipfs-update/issues)!
