@@ -111,7 +111,7 @@ By default, `ipfs-update` uses https://ipfs.io as the gateway URL. If you wish t
 For example:
 
 ```sh
-$ IPFS_CUSTOM_GATEWAY_URL="https://dweb.link" ipfs-update install latest
+$ IPFS_GATEWAY="https://dweb.link" ipfs-update install latest
 ```
 
 ## Contribute

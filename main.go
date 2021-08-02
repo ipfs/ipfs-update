@@ -314,13 +314,9 @@ func createFetcher(c *cli.Context) migrations.Fetcher {
 		distPath = migrations.GetDistPathEnv("")
 	}
 
-	if customIpfsGatewayURL := os.Getenv("IPFS_CUSTOM_GATEWAY_URL"); customIpfsGatewayURL != "" {
-		return migrations.NewMultiFetcher(
-			lib.NewIpfsFetcher(distPath, 0),
-			migrations.NewHttpFetcher(distPath, customIpfsGatewayURL, userAgent, 0))
-	}
+	customIpfsGatewayURL := os.Getenv("IPFS_GATEWAY") // uses https://ipfs.io as default, if unset
 
 	return migrations.NewMultiFetcher(
 		lib.NewIpfsFetcher(distPath, 0),
-		migrations.NewHttpFetcher(distPath, "", userAgent, 0))
+		migrations.NewHttpFetcher(distPath, customIpfsGatewayURL, userAgent, 0))
 }
