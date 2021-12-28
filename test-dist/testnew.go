@@ -297,7 +297,7 @@ func testFileAdd(tdir, bin string) error {
 		stump.Error("testfileadd could not create test file: %s", err)
 	}
 
-	c := exec.Command(bin, "add", "-q", "--progress=false", testFile)
+	c := exec.Command(bin, "add", "--cid-version=1", "--raw-leaves", "--cid-base=base32", "-Q", "--progress=false", testFile)
 	if runtime.GOOS == "windows" {
 		c.Env = os.Environ()
 	}
@@ -337,7 +337,7 @@ func testRefsList(tdir, bin string) error {
 	}
 
 	hashes := strings.Split(string(out), "\n")
-	exp := "QmTFJQ68kaArzsqz2Yjg1yMyEA5TXTfNw6d9wSFhxtBxz2"
+	exp := "bafkreierblbxdq2j667k2oqk4tvinprvgheipfv6ezevlyi4thry774v5e"
 	var found bool
 	for _, h := range hashes {
 		if h == exp {
