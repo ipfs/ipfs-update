@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -318,5 +319,31 @@ func createFetcher(c *cli.Context) migrations.Fetcher {
 
 	return migrations.NewMultiFetcher(
 		lib.NewIpfsFetcher(distPath, 0),
-		migrations.NewHttpFetcher(distPath, customIpfsGatewayURL, userAgent, 0))
+		&retryFetcher{
+			Fetcher:    migrations.NewHttpFetcher(distPath, customIpfsGatewayURL, userAgent, 0),
+			maxRetries: 3,
+		})
+}
+
+type retryFetcher struct {
+	migrations.Fetcher
+	maxRetries int
+}
+
+var _ migrations.Fetcher = (*retryFetcher)(nil)
+
+func (r *retryFetcher) Fetch(ctx context.Context, filePath string) (io.ReadCloser, error) {
+	var lastErr error
+	for i := 0; i < r.maxRetries; i++ {
+		out, err := r.Fetcher.Fetch(ctx, filePath)
+		if err == nil {
+			return out, nil
+		}
+		lastErr = err
+	}
+	return nil, fmt.Errorf("exceeded number of retries. last error was %w", lastErr)
+}
+
+func (r *retryFetcher) Close() error {
+	return r.Fetcher.Close()
 }
