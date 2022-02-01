@@ -321,7 +321,7 @@ func createFetcher(c *cli.Context) migrations.Fetcher {
 		lib.NewIpfsFetcher(distPath, 0),
 		&retryFetcher{
 			Fetcher:    migrations.NewHttpFetcher(distPath, customIpfsGatewayURL, userAgent, 0),
-			maxRetries: 5,
+			maxRetries: 10,
 		})
 }
 
@@ -339,6 +339,12 @@ func (r *retryFetcher) Fetch(ctx context.Context, filePath string) (io.ReadClose
 		if err == nil {
 			return out, nil
 		}
+
+		if ctx.Err() != nil {
+			return nil, err
+		}
+
+		fmt.Printf("error fetching: %s: %s", filePath, err.Error())
 		lastErr = err
 	}
 	return nil, fmt.Errorf("exceeded number of retries. last error was %w", lastErr)
