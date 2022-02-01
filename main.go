@@ -344,7 +344,7 @@ func (r *retryFetcher) Fetch(ctx context.Context, filePath string) (io.ReadClose
 			return nil, err
 		}
 
-		fmt.Printf("error fetching: %s: %s", filePath, err.Error())
+		println("error fetching", i, filePath, err.Error())
 		lastErr = err
 	}
 	return nil, fmt.Errorf("exceeded number of retries. last error was %w", lastErr)
