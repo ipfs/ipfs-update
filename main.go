@@ -321,7 +321,7 @@ func createFetcher(c *cli.Context) migrations.Fetcher {
 		lib.NewIpfsFetcher(distPath, 0),
 		&retryFetcher{
 			Fetcher:    migrations.NewHttpFetcher(distPath, customIpfsGatewayURL, userAgent, 0),
-			maxRetries: 3,
+			maxRetries: 5,
 		})
 }
 
