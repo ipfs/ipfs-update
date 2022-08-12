@@ -1,9 +1,9 @@
 # ipfs-update
 
-> An updater tool for ipfs. Can fetch and install given versions of go-ipfs.
+> An updater tool for ipfs. Can fetch and install given versions of Kubo.
 
 [![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://ipn.io)
-[![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.io/)
+[![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.tech/)
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
 [![Travis CI](https://travis-ci.org/ipfs/ipfs-update.svg?branch=master)](https://travis-ci.org/ipfs/ipfs-update)
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
@@ -14,7 +14,7 @@ You can either install a pre-built binary or build `ipfs-update` from source.
 
 ### Pre-built Binaries
 
-You can download pre-built binaries at: https://dist.ipfs.io/#ipfs-update
+You can download pre-built binaries at: https://dist.ipfs.tech/#ipfs-update
 
 ### From Source
 
@@ -73,17 +73,17 @@ more advanced users.
 ## Install Location
 
 `ipfs-update` tries to intelligently pick the correct install location for
-go-ipfs.
+Kubo.
 
-1. If you have go-ipfs installed, `ipfs-update` will install over your existing install.
-2. If you have a Go development environment setup, it will install go-ipfs along
+1. If you have Kubo (`ipfs`) installed, `ipfs-update` will install over your existing install.
+2. If you have a Go development environment setup, it will install Kubo along
    with all of your other go programs.
 3. Otherwise, it will try to pick a sane, writable install location.
 
-Specifically, `ipfs-update` will install go-ipfs according to the following
+Specifically, `ipfs-update` will install Kubo according to the following
 algorithm:
 
-0. If `go-ipfs` is already installed and in your PATH, `ipfs-update` will
+0. If Kubo (`ipfs`) is already installed and in your PATH, `ipfs-update` will
    replace it. `ipfs-update` will _fail_ if it can't and won't try to install
    elsewhere.
 1. If Go is installed:
@@ -106,7 +106,7 @@ algorithm:
 
 ## Custom IPFS gateway URL
 
-By default, `ipfs-update` uses https://ipfs.io as the gateway URL. If you wish to use your own IPFS gateway URL, please export it via the environment variable `IPFS_CUSTOM_GATEWAY_URL`.
+By default, `ipfs-update` uses https://ipfs.io as the gateway URL. If you wish to use your own IPFS gateway URL, please export it via the environment variable `IPFS_GATEWAY`.
 
 For example:
 
