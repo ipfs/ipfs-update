@@ -244,6 +244,7 @@ func (i *Install) downloadNewBinary(ctx context.Context) error {
 		return err
 	}
 
+	// TODO: switch to "kubo" distname after 1+ year since rename in 2022 ;-)
 	distname := "go-ipfs"
 	stump.Log("fetching %s version %s", distname, i.targetVers)
 

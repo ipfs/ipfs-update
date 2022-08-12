@@ -7,7 +7,7 @@ labels: bug
 #### Version information:
 <!-- Output From `ipfs-update --version`
 
-Please check dist.ipfs.io for a newer version of ipfs-update and update if necessary. Report back if the problem persists.
+Please check dist.ipfs.tech for a newer version of ipfs-update and update if necessary. Report back if the problem persists.
 -->
 
 #### Description:

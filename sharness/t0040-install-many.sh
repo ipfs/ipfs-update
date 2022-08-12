@@ -30,7 +30,7 @@ test_expect_success ".ipfs/ has been created" '
 	exec_docker "$DOCID" "test -d  /root/.ipfs/datastore && test -d /root/.ipfs/blocks"
 '
 
-latest_version=$(curl -s https://dist.ipfs.io/go-ipfs/versions | tail -n 1)
+latest_version=$(curl -s https://dist.ipfs.tech/kubo/versions | tail -n 1)
 test_install_version "$latest_version"
 
 test_expect_success "stop a docker container" '
