@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,7 +18,7 @@ import (
 )
 
 func (i *Install) getTmpPath() (string, error) {
-	tmpd, err := ioutil.TempDir("", "ipfs-update")
+	tmpd, err := os.MkdirTemp("", "ipfs-update")
 	if err != nil {
 		return "", err
 	}
@@ -219,7 +218,7 @@ func StashOldBinary(tag string, keep bool) (string, error) {
 	}
 
 	// write the old path of the binary to the backup dir
-	err = ioutil.WriteFile(pathpath, []byte(loc), 0o644)
+	err = os.WriteFile(pathpath, []byte(loc), 0o644)
 	if err != nil {
 		return "", fmt.Errorf("could not stash path: %s", err)
 	}
@@ -402,7 +401,7 @@ func ensure(dir string) bool {
 }
 
 func canWrite(dir string) bool {
-	fi, err := ioutil.TempFile(dir, ".ipfs-update-test")
+	fi, err := os.CreateTemp(dir, ".ipfs-update-test")
 	if err != nil {
 		return false
 	}
