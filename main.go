@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
@@ -20,8 +21,15 @@ import (
 	"github.com/whyrusleeping/stump"
 )
 
+//go:embed  version.json
+var versionFile []byte
+
 func init() {
 	stump.ErrOut = os.Stderr
+	err := config.SetVersionNumber(versionFile)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func main() {
