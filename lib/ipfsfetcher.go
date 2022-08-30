@@ -9,8 +9,8 @@ import (
 	"time"
 
 	api "github.com/ipfs/go-ipfs-api"
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	"github.com/ipfs/ipfs-update/util"
+	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 )
 
 const (

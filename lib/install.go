@@ -10,10 +10,10 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/blang/semver"
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
+	"github.com/blang/semver/v4"
 	test "github.com/ipfs/ipfs-update/test-dist"
 	"github.com/ipfs/ipfs-update/util"
+	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 	"github.com/whyrusleeping/stump"
 )
 

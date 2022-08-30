@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	"github.com/ipfs/ipfs-update/config"
 	"github.com/ipfs/ipfs-update/lib"
 	"github.com/ipfs/ipfs-update/util"
+	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 
 	"github.com/urfave/cli/v2"
 	"github.com/whyrusleeping/stump"

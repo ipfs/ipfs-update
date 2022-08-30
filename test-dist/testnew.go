@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	util "github.com/ipfs/ipfs-update/util"
+	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 	stump "github.com/whyrusleeping/stump"
 )
 
