@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
+	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 	"github.com/whyrusleeping/stump"
 )
 

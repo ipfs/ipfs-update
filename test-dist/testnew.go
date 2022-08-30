@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -13,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	util "github.com/ipfs/ipfs-update/util"
+	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 	stump "github.com/whyrusleeping/stump"
 )
 
@@ -60,7 +59,7 @@ func (d *daemon) Close() error {
 func tweakConfig(ipfspath string) error {
 	cfgpath := filepath.Join(ipfspath, "config")
 	cfg := make(map[string]interface{})
-	cfgbytes, err := ioutil.ReadFile(cfgpath)
+	cfgbytes, err := os.ReadFile(cfgpath)
 	if err != nil {
 		return err
 	}
@@ -93,7 +92,7 @@ func tweakConfig(ipfspath string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(cfgpath, out, 0o644)
+	err = os.WriteFile(cfgpath, out, 0o644)
 	if err != nil {
 		return fmt.Errorf("error writing tweaked config: %s", err)
 	}
@@ -203,7 +202,7 @@ func TestBinary(bin, version string) error {
 		return fmt.Errorf("error creating test staging directory: %s", err)
 	}
 
-	tdir, err := ioutil.TempDir(staging, "test")
+	tdir, err := os.MkdirTemp(staging, "test")
 	if err != nil {
 		return err
 	}
@@ -298,7 +297,7 @@ func testFileAdd(tdir, bin string) error {
 	stump.VLog("  - checking that we can add and cat a file")
 	text := []byte("hello world! This node should work")
 	testFile := filepath.Join(tdir, "/test.txt")
-	err := ioutil.WriteFile(testFile, text, 0o644)
+	err := os.WriteFile(testFile, text, 0o644)
 	if err != nil {
 		stump.Error("testfileadd could not create test file: %s", err)
 	}

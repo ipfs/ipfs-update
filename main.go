@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -12,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	"github.com/ipfs/ipfs-update/config"
 	"github.com/ipfs/ipfs-update/lib"
 	"github.com/ipfs/ipfs-update/util"
+	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 
 	"github.com/urfave/cli/v2"
 	"github.com/whyrusleeping/stump"
@@ -218,7 +217,7 @@ var cmdRevert = &cli.Command{
 		if err != nil {
 			stump.Fatal("could not find ipfs directory:", err)
 		}
-		oldpath, err := ioutil.ReadFile(path.Join(ipfsDir, "old-bin", "path-old"))
+		oldpath, err := os.ReadFile(path.Join(ipfsDir, "old-bin", "path-old"))
 		if err != nil {
 			stump.Fatal("path for previous installation could not be read:", err)
 		}

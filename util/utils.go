@@ -3,14 +3,13 @@ package util
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
 	"strconv"
 	"strings"
 
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
+	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 )
 
 // Local IPFS API
@@ -93,7 +92,7 @@ func ApiEndpoint(ipfsDir string) (string, error) {
 		return "", err
 	}
 
-	apiData, err := ioutil.ReadFile(path.Join(ipfsDir, apiFile))
+	apiData, err := os.ReadFile(path.Join(ipfsDir, apiFile))
 	if err != nil {
 		return "", err
 	}

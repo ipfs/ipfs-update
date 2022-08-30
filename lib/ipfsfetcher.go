@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
 	"path"
 	"strings"
 	"time"
 
 	api "github.com/ipfs/go-ipfs-api"
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	"github.com/ipfs/ipfs-update/util"
+	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 )
 
 const (
@@ -76,7 +75,7 @@ func (f *IpfsFetcher) Fetch(ctx context.Context, filePath string) ([]byte, error
 	}
 	defer rc.Close()
 
-	return ioutil.ReadAll(rc)
+	return io.ReadAll(rc)
 }
 
 // ApiShell creates a new ipfs api shell and checks that it is up.  If the shell

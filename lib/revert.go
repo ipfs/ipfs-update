@@ -3,15 +3,14 @@ package lib
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"text/tabwriter"
 	"time"
 
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	"github.com/ipfs/ipfs-update/util"
+	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 	"github.com/whyrusleeping/stump"
 )
 
@@ -46,7 +45,7 @@ func SelectRevertBin() (string, error) {
 		return "", fmt.Errorf("no prior binary found at: %s", oldbinpath)
 	}
 
-	entries, err := ioutil.ReadDir(oldbinpath)
+	entries, err := os.ReadDir(oldbinpath)
 	if err != nil {
 		return "", err
 	}
@@ -69,7 +68,11 @@ func SelectRevertBin() (string, error) {
 	stump.Log("found multiple old binaries:")
 	tw := tabwriter.NewWriter(stump.LogOut, 6, 4, 4, ' ', 0)
 	for i, bin := range entries {
-		fmt.Fprintf(tw, "%d)\t%s\t%s\n", i+1, bin.Name(), bin.ModTime().Format(time.ANSIC))
+		info, err := bin.Info()
+		if err != nil {
+			return "", fmt.Errorf("failed to read fs info about old binary: %s", bin.Name())
+		}
+		fmt.Fprintf(tw, "%d)\t%s\t%s\n", i+1, bin.Name(), info.ModTime().Format(time.ANSIC))
 	}
 	tw.Flush()
 

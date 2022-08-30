@@ -1,14 +1,13 @@
 package util
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
 )
 
 func TestApiEndpoint(t *testing.T) {
-	fakeHome, err := ioutil.TempDir("", "testhome")
+	fakeHome, err := os.MkdirTemp("", "testhome")
 	if err != nil {
 		panic(err)
 	}
@@ -31,7 +30,7 @@ func TestApiEndpoint(t *testing.T) {
 	}
 
 	apiPath := path.Join(fakeIpfs, apiFile)
-	err = ioutil.WriteFile(apiPath, []byte("bad-data"), 0o644)
+	err = os.WriteFile(apiPath, []byte("bad-data"), 0o644)
 	if err != nil {
 		panic(err)
 	}
@@ -41,7 +40,7 @@ func TestApiEndpoint(t *testing.T) {
 		t.Fatal("expected error when bad data")
 	}
 
-	err = ioutil.WriteFile(apiPath, []byte("/ip4/127.0.0.1/tcp/5001"), 0o644)
+	err = os.WriteFile(apiPath, []byte("/ip4/127.0.0.1/tcp/5001"), 0o644)
 	if err != nil {
 		panic(err)
 	}
