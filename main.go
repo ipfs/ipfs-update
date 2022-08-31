@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"context"
+	_ "embed"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -11,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ipfs/ipfs-update/config"
 	"github.com/ipfs/ipfs-update/lib"
 	"github.com/ipfs/ipfs-update/util"
 	"github.com/ipfs/kubo/repo/fsrepo/migrations"
@@ -19,6 +20,10 @@ import (
 	"github.com/urfave/cli/v2"
 	"github.com/whyrusleeping/stump"
 )
+
+//go:embed  version.json
+var versionFile []byte
+var CurrentVersionNumber = readCurrentVersionNumberFromEmbed(versionFile)
 
 func init() {
 	stump.ErrOut = os.Stderr
@@ -45,7 +50,7 @@ Otherwise you can close this window.`, exeName, windowsHelpURL)
 
 	app := cli.NewApp()
 	app.Usage = "Update ipfs."
-	app.Version = config.CurrentVersionNumber
+	app.Version = CurrentVersionNumber
 
 	app.Flags = []cli.Flag{
 		&cli.BoolFlag{
@@ -321,4 +326,16 @@ func createFetcher(c *cli.Context) migrations.Fetcher {
 			Fetcher:  migrations.NewHttpFetcher(distPath, customIpfsGatewayURL, userAgent, 0),
 			MaxTries: 3,
 		})
+}
+
+func readCurrentVersionNumberFromEmbed(versionFile []byte) string {
+	type VersionFile struct {
+		Version string `json:"version"`
+	}
+	manifest := VersionFile{}
+	err := json.Unmarshal(versionFile, &manifest)
+	if err != nil {
+		return "0.0.0-unknown"
+	}
+	return manifest.Version
 }
