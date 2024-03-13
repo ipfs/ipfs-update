@@ -2,7 +2,6 @@ module github.com/ipfs/ipfs-update
 
 go 1.21
 
-
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/ipfs/go-ipfs-api v0.3.0
