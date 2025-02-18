@@ -1,3 +1,15 @@
+> [!CAUTION]
+> # ⛔️ Deprecation Warning
+>
+> This tool is deprecated and no longer maintained.
+>
+> Consider using:
+> - Package manager provided by your operating system
+> - Docker Images at https://github.com/ipfs/kubo#docker
+> - Kubo Releases at GitHub: https://github.com/ipfs/kubo/releases
+> - Kubo Releases at https://dist.ipfs.tech/#kubo
+> - Building Kubo yourself.
+
 # ipfs-update
 
 > An updater tool for ipfs. Can fetch and install given versions of Kubo.
