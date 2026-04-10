@@ -7,24 +7,23 @@ import (
 	"github.com/ipfs/kubo/repo/fsrepo/migrations"
 )
 
-// delegateMinRepoVersion is the repo version above which ipfs-update
-// refuses to run and points users to the built-in `ipfs update` command.
-const delegateMinRepoVersion = 16
+// maxLegacyRepoVersion is the last repo version that requires ipfs-update.
+// Kubo v0.37+ migrated to repo version 17 and embedded migration tooling,
+// making ipfs-update unnecessary.
+const maxLegacyRepoVersion = 16
 
 // exitIfBuiltinUpdateAvailable checks the IPFS repo version and exits
-// with guidance to use `ipfs update` when the repo version indicates
-// a Kubo release that ships the built-in update command.
+// with guidance to use `ipfs update` when Kubo v0.37+ is detected.
 func exitIfBuiltinUpdateAvailable() {
 	repoVer, err := migrations.RepoVersion("")
 	if err != nil {
 		return
 	}
-	if repoVer <= delegateMinRepoVersion {
+	if repoVer <= maxLegacyRepoVersion {
 		return
 	}
 
-	fmt.Fprintf(os.Stderr, "IPFS repo version %d detected (> %d).\n", repoVer, delegateMinRepoVersion)
-	fmt.Fprintf(os.Stderr, "Your Kubo version has a built-in update command.\n")
-	fmt.Fprintf(os.Stderr, "Run `ipfs update --help` instead of ipfs-update.\n")
+	fmt.Fprintf(os.Stderr, "IPFS repo version %d (> %d) detected, indicating Kubo v0.37 or later.\n", repoVer, maxLegacyRepoVersion)
+	fmt.Fprintf(os.Stderr, "ipfs-update is no longer needed. Use `ipfs update --help` instead.\n")
 	os.Exit(1)
 }
