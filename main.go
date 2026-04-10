@@ -48,6 +48,8 @@ Otherwise you can close this window.`, exeName, windowsHelpURL)
 		}
 	}
 
+	exitIfBuiltinUpdateAvailable()
+
 	app := cli.NewApp()
 	app.Usage = "Update ipfs."
 	app.Version = CurrentVersionNumber
